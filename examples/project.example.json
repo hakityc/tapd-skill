@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "user": {
+    "display_name": "开发者A"
+  },
+  "git": {
+    "base_branch": "master"
+  },
+  "branch": {
+    "type_map": {
+      "Story": "feat",
+      "Task": "feat",
+      "Bug": "hotfix"
+    },
+    "name_template": "{type}/{date}/{slug}",
+    "date_format": "YYMMDD",
+    "slug_language": "en"
+  },
+  "tapd": {
+    "workspace_id": "12345678"
+  }
+}

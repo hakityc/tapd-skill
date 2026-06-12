@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tapd-context/context.schema.json",
+  "title": "TAPD Branch Context Store",
+  "type": "object",
+  "required": [
+    "version",
+    "branches"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "branches": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "branch",
+          "created_at",
+          "updated_at",
+          "binding",
+          "git",
+          "work_item",
+          "assignee",
+          "status"
+        ],
+        "properties": {
+          "binding": {
+            "type": "object",
+            "required": [
+              "method"
+            ],
+            "properties": {
+              "method": {
+                "enum": [
+                  "start",
+                  "bind"
+                ]
+              }
+            }
+          },
+          "status": {
+            "type": "object",
+            "required": [
+              "local_phase",
+              "last_synced_at"
+            ],
+            "properties": {
+              "local_phase": {
+                "const": "initialized"
+              },
+              "last_synced_at": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

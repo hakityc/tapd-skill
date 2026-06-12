@@ -1,0 +1,9 @@
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local TAPD context created in repositories where this skill is used.
+.tapd/project.json
+.tapd/context.json
+.tapd/logs/

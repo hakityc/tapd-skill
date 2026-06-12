@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tapd-context/input.schema.json",
+  "title": "TAPD Context Input",
+  "type": "object",
+  "required": [
+    "entity_type",
+    "id"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "entity_type": {
+      "enum": [
+        "Story",
+        "Task",
+        "Bug"
+      ]
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "short_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "external_url": {
+      "type": "string"
+    },
+    "user_nick": {
+      "type": "string"
+    },
+    "workspace_id": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}

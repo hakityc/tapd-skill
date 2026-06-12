@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "name": "tapd-skill-min-evals",
+  "cases": [
+    {
+      "id": "intake-must-read-story-description-and-proto",
+      "input": "类型：Story 标题：【示例平台】订单审批结果通知 工作项 id：1112345678000000003 链接：https://www.tapd.cn/tapd_fe/12345678/story/detail/1112345678000000003 当前用户：开发者A 你先读需求，提炼 must/should/out-of-scope，并对照已有 tasks 看是否漏拆。",
+      "expected": [
+        "必须先探测 MCP 可用性，不可用则引导 bootstrap（策略 A：写配置 + Reload/重启）",
+        "必须调用 get_stories_or_tasks 拉取 story 且 fields 包含 description",
+        "必须输出 must/should/out-of-scope、原型提取、Story↔Tasks 对照、代码落点初筛"
+      ]
+    },
+    {
+      "id": "task-update-guard-only-my-owner",
+      "input": "帮我把这个 story 下所有【前端】任务的 effort 都改成 2d，并把 owner 都改成 开发者A。",
+      "expected": [
+        "必须先确认“我”是谁（当前用户/CURRENT_USER_NICK/脚本/询问）",
+        "必须按分隔符切分 owner 并精确匹配“我”，相似昵称和非本人任务跳过并说明",
+        "必须先 dry-run 输出将修改清单，再执行更新并回读校验"
+      ]
+    },
+    {
+      "id": "tcase-fallback-openapi-when-mcp-missing",
+      "input": "基于这个 story 生成 TAPD 测试用例，并按既定规则分目录创建，还要把用例关联到 story 下面。",
+      "expected": [
+        "必须先完成 intake，再生成用例草稿（precondition/steps/expectation）",
+        "若 tapd-mcp 缺少目录/关联能力，允许 OpenAPI fallback，并明确标注 fallback 原因",
+        "若关联返回 403，必须明确提示缺少 stories::add_story_tcase 权限与后续动作"
+      ]
+    },
+    {
+      "id": "context-resolve-prefers-new-json",
+      "input": "/tapd 开始做这个需求\n{\"source\":\"tapd\",\"entity_type\":\"Story\",\"id\":\"1112345678000000001\",\"title\":\"新需求\",\"url\":\"https://www.tapd.cn/tapd_fe/12345678/story/detail/1112345678000000001\",\"user_nick\":\"开发者A\"}",
+      "expected": [
+        "本轮 Context JSON 优先于当前分支旧绑定",
+        "若当前分支绑定不同工作项，必须说明将从 base_branch 创建新分支并等待确认",
+        "不得覆盖或复用当前分支旧绑定"
+      ]
+    },
+    {
+      "id": "context-first-start-initializes-after-confirmation",
+      "input": "/tapd 开始做这个需求\n{\"source\":\"tapd\",\"entity_type\":\"Task\",\"id\":\"1112345678000000002\",\"title\":\"实现订单风险标记开关\",\"url\":\"https://www.tapd.cn/tapd_fe/12345678/task/detail/1112345678000000002\",\"user_nick\":\"开发者A\"}",
+      "expected": [
+        "先执行 context resolve",
+        "start 返回 PROJECT_NOT_INITIALIZED 时探测 base 候选并展示给用户确认",
+        "确认后 init、重试 start，再进入 MCP 能力门禁"
+      ]
+    },
+    {
+      "id": "context-continue-restores-current-branch",
+      "input": "/tapd 继续做实现计划",
+      "expected": [
+        "本轮没有新工作项输入时调用 current --format json",
+        "成功后使用当前分支绑定，不要求重新粘贴 TAPD 信息",
+        "根据稳定错误码处理 CONTEXT_NOT_FOUND 等失败"
+      ]
+    },
+    {
+      "id": "context-dirty-worktree-exact-exclusions",
+      "input": "/tapd 开始新需求；仓库里只有 .tapd/project.json、.tapd/context.json 和 .tapd/logs/run.log 的变化，另一个场景是 .tapd/README.md 有变化。",
+      "expected": [
+        "前三个 tapd-context 生成路径不阻止 start",
+        ".tapd/README.md 必须被视为普通 dirty change 并阻止切分支",
+        "不得自动 stash、pull 或修改 .gitignore"
+      ]
+    },
+    {
+      "id": "owner-exact-match-rejects-similar-nick",
+      "input": "当前用户是开发者A，把 owner 是开发者A、开发者A同学、小开发者A的前端任务 effort 都改成 2d。",
+      "expected": [
+        "按共享 safety-policy 分割 owner tokens 后精确匹配",
+        "只修改 owner token 等于开发者A的任务",
+        "开发者A同学和小开发者A必须跳过并说明"
+      ]
+    },
+    {
+      "id": "capability-matrix-does-not-assume-optional-tools",
+      "input": "创建测试用例并关联 Story，然后同步一条评论；当前 MCP 只有 create_or_update_tcases 和 create_comments，没有 get_comments 和 entity_relations。",
+      "expected": [
+        "允许创建用例但明确未关联 Story",
+        "create_comments 返回成功时说明写入成功但无法评论列表回读",
+        "不得假设 get_comments 或 entity_relations 存在"
+      ]
+    }
+  ]
+}

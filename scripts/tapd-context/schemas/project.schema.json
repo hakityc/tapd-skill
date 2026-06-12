@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tapd-context/project.schema.json",
+  "title": "TAPD Project Configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "user",
+    "git"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "user": {
+      "type": "object",
+      "required": [
+        "display_name"
+      ],
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "required": [
+        "base_branch"
+      ],
+      "properties": {
+        "base_branch": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "branch": {
+      "type": "object"
+    },
+    "tapd": {
+      "type": "object"
+    }
+  }
+}
