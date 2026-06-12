@@ -2,6 +2,8 @@
 
 一个面向 AI 编程代理的 TAPD 研发工作流 skill。它在原有需求读取、任务编排、实现计划、测试用例和估时排期流程前，增加了 Git 分支级上下文记忆。
 
+[![skills.sh](https://skills.sh/b/hakityc/tapd-skill)](https://skills.sh/hakityc/tapd-skill/tapd)
+
 核心组件：
 
 - `SKILL.md`：意图识别、context resolve、MCP 能力门禁和工作流路由。
@@ -34,20 +36,47 @@
 
 ## 安装
 
-将仓库放入代理支持的 skills 目录，并确保目录名为 `tapd`：
+推荐通过 [Skills.sh](https://skills.sh) 安装。CLI 会自动识别 Codex、Claude Code、Cursor 等支持的代理：
 
 ```bash
-git clone https://github.com/hakityc/tapd-skill.git tapd
+npx skills add hakityc/tapd-skill --skill tapd
 ```
 
-不同代理的 skill 目录可能不同，例如：
+安装到用户级目录并跳过交互确认：
 
-```text
-~/.codex/skills/tapd
-~/.agents/skills/tapd
+```bash
+npx skills add hakityc/tapd-skill --skill tapd --global --yes
 ```
 
-远端 TAPD 工作流还需要配置 [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)。平台配置与验证状态见 [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)。
+指定代理：
+
+```bash
+npx skills add hakityc/tapd-skill --skill tapd --global --agent codex --yes
+npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --yes
+```
+
+无需在 Skills.sh 单独上传压缩包。公开 GitHub 仓库中的 `SKILL.md` 是发布源，用户通过 `npx skills add` 安装后会被 Skills.sh 自动索引。
+
+无法使用 `npx` 时，也可以手工 clone 到代理支持的 skills 目录，并确保最终目录名为 `tapd`。
+
+## 最简配置
+
+团队成员只需要两类配置：
+
+1. 在本机 MCP 配置中提供个人 `TAPD_ACCESS_TOKEN`。
+2. 项目仓库提交不含秘密的 `.tapd/config.json`，统一 workspace、base 分支和可选分支规则。
+
+```json
+{
+  "version": 1,
+  "workspace_id": "12345678",
+  "base_branch": "master"
+}
+```
+
+远端 TAPD 工作流使用 [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)。平台配置与验证状态见 [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)。
+
+> 当前 P0 CLI 仍读取 `.tapd/project.json`。`.tapd/config.json` 的团队共享模式是下一兼容版本的目标；完成迁移前请继续按下文执行 `tapd-context init`。
 
 ## 运行要求
 
