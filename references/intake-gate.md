@@ -16,12 +16,18 @@
 
 ## 强制步骤
 
-1. 从 context resolve 结果取得 `workspace_id`、`entity_type` 和字符串 ID。  
-2. 获取 Story：`get_stories_or_tasks(workspace_id, { entity_type: 'stories', id: story_id, fields: 'id,name,description,...' })`（必须带 `description`）。  
-3. 提取并查看原型图：若 `description` 有 `/tfl/captures/...png` 且存在 `get_image`，逐张获取下载地址并读取图片内容；缺少工具时记录 gap。  
-4. 拉取 tasks：`get_stories_or_tasks(workspace_id, { entity_type: 'tasks', story_id, fields: 'id,name,description,status,owner,created,modified' })`。  
-5. 用仓库现状做边界：定位相关模块，形成“代码落点初筛”。  
-6. 输出“目标输出”四部分内容。  
+1. 从 context resolve 结果取得 `workspace_id`、`entity_type` 和字符串 ID。
+2. 若入口是 Task：
+   - 先调用 `get_stories_or_tasks(... entity_type='tasks', id=task_id, fields='id,name,description,status,owner,story_id,parent_id,...')`。
+   - 从返回结果取得 `story_id`；不得把 task ID 当成 story ID。
+   - 保留该 Task 作为“当前执行焦点”。
+   - 若返回缺少 `story_id`，输出 Task-only intake 和缺失项，不猜测父 Story。
+3. 若入口是 Story，当前 ID 即 `story_id`。
+4. 获取父 Story：`get_stories_or_tasks(workspace_id, { entity_type: 'stories', id: story_id, fields: 'id,name,description,...' })`（必须带 `description`）。
+5. 提取并查看原型图：若 `description` 有 `/tfl/captures/...png` 且存在 `get_image`，逐张获取下载地址并读取图片内容；缺少工具时记录 gap。
+6. 拉取同 Story tasks：`get_stories_or_tasks(workspace_id, { entity_type: 'tasks', story_id, fields: 'id,name,description,status,owner,created,modified' })`。
+7. 用仓库现状做边界：定位相关模块，形成“代码落点初筛”。
+8. 输出“目标输出”四部分内容；Task 入口额外标明当前焦点 Task。
 
 ## 输出模板（必须）
 

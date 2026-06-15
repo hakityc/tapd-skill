@@ -74,6 +74,7 @@ export function getDirtyEntries(repoRoot: string): string[] {
       "--untracked-files=all",
       "--",
       ".",
+      ":(exclude).tapd/config.json",
       ":(exclude).tapd/project.json",
       ":(exclude).tapd/context.json",
       ":(exclude).tapd/logs/**",

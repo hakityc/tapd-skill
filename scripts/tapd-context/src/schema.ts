@@ -15,20 +15,14 @@ export interface WorkItemInput {
 
 export interface ProjectConfig {
   version: 1;
-  user: {
-    display_name: string;
-  };
-  git: {
-    base_branch: string;
-  };
+  base_branch: string;
+  workspace_id?: string;
+  user_nick?: string;
   branch: {
     type_map: Record<EntityType, string>;
     name_template: string;
     date_format: "YYMMDD";
     slug_language: "en";
-  };
-  tapd?: {
-    workspace_id?: string;
   };
 }
 
@@ -127,15 +121,16 @@ export function normalizeWorkItem(value: unknown): WorkItemInput {
   return item;
 }
 
-export function defaultProjectConfig(user: string, baseBranch: string): ProjectConfig {
+export function defaultProjectConfig(
+  baseBranch: string,
+  workspaceId?: string,
+  userNick?: string,
+): ProjectConfig {
   return {
     version: 1,
-    user: {
-      display_name: user,
-    },
-    git: {
-      base_branch: baseBranch,
-    },
+    base_branch: baseBranch,
+    ...(workspaceId ? { workspace_id: workspaceId } : {}),
+    ...(userNick ? { user_nick: userNick } : {}),
     branch: {
       type_map: {
         Story: "feat",
@@ -151,19 +146,25 @@ export function defaultProjectConfig(user: string, baseBranch: string): ProjectC
 
 export function validateProjectConfig(value: unknown): ProjectConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new CliError("INVALID_PROJECT_FILE", ".tapd/project.json 必须是 JSON 对象。");
+    throw new CliError("INVALID_CONFIG_FILE", "TAPD 项目配置必须是 JSON 对象。");
   }
-  const config = value as Partial<ProjectConfig>;
-  const user = asString(config.user?.display_name);
-  const baseBranch = asString(config.git?.base_branch);
-  if (config.version !== 1 || !user || !baseBranch) {
+  const config = value as Partial<ProjectConfig> & {
+    user?: { display_name?: unknown };
+    git?: { base_branch?: unknown };
+    tapd?: { workspace_id?: unknown };
+  };
+  const baseBranch = asString(config.base_branch) || asString(config.git?.base_branch);
+  const workspaceId =
+    asString(config.workspace_id) || asString(config.tapd?.workspace_id);
+  const userNick = asString(config.user_nick) || asString(config.user?.display_name);
+  if (config.version !== 1 || !baseBranch) {
     throw new CliError(
-      "INVALID_PROJECT_FILE",
-      ".tapd/project.json 缺少 version、user.display_name 或 git.base_branch。",
+      "INVALID_CONFIG_FILE",
+      "TAPD 项目配置缺少 version 或 base_branch。",
     );
   }
 
-  const defaults = defaultProjectConfig(user, baseBranch);
+  const defaults = defaultProjectConfig(baseBranch, workspaceId, userNick);
   const typeMap = config.branch?.type_map;
   if (typeMap) {
     for (const entityType of ENTITY_TYPES) {
@@ -175,9 +176,6 @@ export function validateProjectConfig(value: unknown): ProjectConfig {
   }
   defaults.branch.name_template =
     asString(config.branch?.name_template) || defaults.branch.name_template;
-  if (config.tapd?.workspace_id) {
-    defaults.tapd = { workspace_id: asString(config.tapd.workspace_id) };
-  }
   return defaults;
 }
 

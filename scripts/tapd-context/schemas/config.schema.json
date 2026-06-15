@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tapd-context/config.schema.json",
+  "title": "TAPD Local Project Configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "base_branch"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "base_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_nick": {
+      "type": "string",
+      "minLength": 1
+    },
+    "branch": {
+      "type": "object",
+      "properties": {
+        "type_map": {
+          "type": "object"
+        },
+        "name_template": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date_format": {
+          "const": "YYMMDD"
+        },
+        "slug_language": {
+          "const": "en"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

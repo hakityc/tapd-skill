@@ -13,9 +13,10 @@
 1. 读取 intake 输出：Story 约束、原型、代码落点初筛。  
 2. **确认“我”是谁（强制）**：  
    - 优先使用用户输入中的 `当前用户：<nick>`  
-   - 若缺失：读取 `CURRENT_USER_NICK`（来自 MCP env）  
-   - 若仍缺失：尝试运行 `scripts/get_current_user.py` 通过 `GET /users/info` 自动获取 nick  
-   - 若仍为空：**必须主动询问用户**“你的 TAPD nick（处理人字段）是什么？”  
+   - 其次使用当前 context 或 `.tapd/config.json` 中的 `user_nick`
+   - 若宿主进程可读取 `TAPD_ACCESS_TOKEN`，可运行 `scripts/get_current_user.py`
+   - MCP server 会用 token 在内部识别用户，但当前工具列表不保证暴露 nick；不得假装能从不可见的 MCP 环境变量读取
+   - 若仍为空：询问一次 TAPD nick；用户确认后可执行 `tapd-context configure --user "<nick>"`，避免后续重复询问
 3. 结合现有代码合理拆解任务：每条任务可独立验收。  
 4. **Dry-run（强制）**：先输出将创建的任务列表（name/owner/范围摘要/预计工时（若有）/计划 begin-due（若有））。用户本轮未明确授权写入时必须等待确认；已明确要求直接创建时，展示摘要后继续。  
 5. 创建 tasks（强制补 owner）：  

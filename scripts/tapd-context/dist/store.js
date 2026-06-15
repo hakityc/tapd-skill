@@ -1,7 +1,8 @@
 import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { CliError, emptyContextStore, validateContextStore, validateProjectConfig, } from "./schema.js";
-export const PROJECT_FILE = join(".tapd", "project.json");
+export const CONFIG_FILE = join(".tapd", "config.json");
+export const LEGACY_PROJECT_FILE = join(".tapd", "project.json");
 export const CONTEXT_FILE = join(".tapd", "context.json");
 function readJson(path, errorCode) {
     try {
@@ -16,16 +17,29 @@ function readJson(path, errorCode) {
     }
 }
 export function readProject(repoRoot) {
-    const path = join(repoRoot, PROJECT_FILE);
+    const configPath = join(repoRoot, CONFIG_FILE);
+    const legacyPath = join(repoRoot, LEGACY_PROJECT_FILE);
     try {
-        return validateProjectConfig(readJson(path, "INVALID_PROJECT_FILE"));
+        return validateProjectConfig(readJson(configPath, "INVALID_CONFIG_FILE"));
     }
     catch (error) {
         const cause = error;
-        if (cause.code === "ENOENT") {
-            throw new CliError("PROJECT_NOT_INITIALIZED", "尚未初始化 .tapd/project.json，请先执行 tapd-context init。");
+        if (cause.code !== "ENOENT") {
+            throw error;
         }
-        throw error;
+    }
+    try {
+        return validateProjectConfig(readJson(legacyPath, "INVALID_PROJECT_FILE"));
+    }
+    catch (error) {
+        const cause = error;
+        if (cause.code !== "ENOENT") {
+            if (error instanceof CliError && error.code === "INVALID_CONFIG_FILE") {
+                throw new CliError("INVALID_PROJECT_FILE", ".tapd/project.json 配置无效。");
+            }
+            throw error;
+        }
+        throw new CliError("PROJECT_NOT_INITIALIZED", "尚未初始化 .tapd/config.json，请先执行 tapd-context init。");
     }
 }
 export function readContextStore(repoRoot) {
@@ -58,7 +72,7 @@ export function writeJsonAtomic(path, value, errorCode) {
     }
 }
 export function writeProject(repoRoot, config) {
-    writeJsonAtomic(join(repoRoot, PROJECT_FILE), config, "PROJECT_WRITE_FAILED");
+    writeJsonAtomic(join(repoRoot, CONFIG_FILE), config, "CONFIG_WRITE_FAILED");
 }
 export function writeContextStore(repoRoot, store) {
     writeJsonAtomic(join(repoRoot, CONTEXT_FILE), store, "CONTEXT_WRITE_FAILED");

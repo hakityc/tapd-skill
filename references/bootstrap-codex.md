@@ -8,13 +8,15 @@
 
 ## Command
 
+已验证的 `mcp-server-tapd` 版本：`8.0.78`。只需要个人 token；API 域名和当前用户由服务默认值及 token 自动解析。
+
 ```bash
+read -s TAPD_ACCESS_TOKEN
+export TAPD_ACCESS_TOKEN
 codex mcp add \
-  --env TAPD_ACCESS_TOKEN=<token> \
-  --env TAPD_API_BASE_URL=https://api.tapd.cn \
-  --env TAPD_BASE_URL=https://www.tapd.cn \
-  --env CURRENT_USER_NICK=<nick> \
-  tapd-mcp -- uvx mcp-server-tapd
+  --env TAPD_ACCESS_TOKEN="$TAPD_ACCESS_TOKEN" \
+  tapd-mcp -- uvx mcp-server-tapd==8.0.78
+unset TAPD_ACCESS_TOKEN
 ```
 
 CLI 会写入 Codex MCP 配置。不要直接改其他 `[mcp_servers.*]`。

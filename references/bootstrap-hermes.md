@@ -15,15 +15,13 @@ mcp_servers:
   tapd-mcp:
     command: uvx
     args:
-      - mcp-server-tapd
+      - mcp-server-tapd==8.0.78
     env:
       TAPD_ACCESS_TOKEN: "<token>"
-      TAPD_API_BASE_URL: "https://api.tapd.cn"
-      TAPD_BASE_URL: "https://www.tapd.cn"
-      CURRENT_USER_NICK: "<nick>"
 ```
 
 只在用户授权后最小 patch `mcp_servers.tapd-mcp`，保留其他 server 和 env。
+个人 token 是唯一必填环境变量。
 
 ## Restart and probe
 

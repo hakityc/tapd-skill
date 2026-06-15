@@ -18,9 +18,22 @@
 | 评论同步 | `create_comments` | `get_comments` | 缺创建工具则不写；缺读取工具可依据成功返回说明无法列表回读 |
 | Tcase 创建 | `create_or_update_tcases` 或 `create_tcases_batch` | `get_tcases`, `entity_relations` | 能创建就创建；缺关联工具时说明未关联 Story |
 | Schedule | `get_stories_or_tasks` | `update_story_or_task` | 默认只建议；明确写回但缺更新工具时停止 |
+| 开发执行 | Story/Task intake 能力 | `create_comments` | 本地编码与测试可继续；远端同步按能力降级 |
+| 开发收尾 | 无，本地验证可执行 | `get_commit_msg`, `get_timesheets`, `add_timesheets`, `update_timesheets`, `create_comments` | 分别生成提交/工时/评论草案，不阻塞本地收尾 |
 | Bug | 无，本地 context 可用 | `get_bug` 或等价读取工具 | 缺读取能力只绑定，不进入完整 intake |
 
 `get_bug`、`get_comments`、`entity_relations` 都是可选/待探测能力，不得写成 MCP 必然提供。
+
+## Current user
+
+`mcp-server-tapd` 使用个人 token 时会在服务内部调用 `users/info` 识别用户，但当前工具列表不保证把 nick 单独返回给调用方。需要 owner 精确匹配时，按以下顺序获取：
+
+1. 本轮 Context JSON 的 `user_nick`。
+2. 当前 context 或 `.tapd/config.json` 的 `user_nick`。
+3. 宿主环境可见 token 时运行 `scripts/get_current_user.py`。
+4. 询问用户一次，并用 `tapd-context configure --user` 保存到本地配置。
+
+不得假设 Agent 能读取 MCP 子进程环境变量。
 
 ## Fallback
 

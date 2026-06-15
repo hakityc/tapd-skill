@@ -50,9 +50,19 @@ function input(overrides = {}) {
 
 test("init, start, current and status form the P0 happy path", () => {
   const cwd = repo();
-  const initialized = run(cwd, "init", "--user", "开发者A", "--base", "master");
+  const initialized = run(
+    cwd,
+    "init",
+    "--base",
+    "master",
+    "--workspace",
+    "12345678",
+    "--user",
+    "开发者A",
+  );
   assert.equal(initialized.status, 0);
   assert.equal(initialized.json.ok, true);
+  assert.equal(initialized.json.config_file, ".tapd/config.json");
 
   const started = run(cwd, "start", "--input", input());
   assert.equal(started.status, 0);
@@ -75,7 +85,7 @@ test("init, start, current and status form the P0 happy path", () => {
 
 test("dirty check ignores only generated local state paths", () => {
   const cwd = repo();
-  assert.equal(run(cwd, "init", "--user", "开发者A", "--base", "master").status, 0);
+  assert.equal(run(cwd, "init", "--base", "master").status, 0);
 
   mkdirSync(join(cwd, ".tapd", "logs"), { recursive: true });
   writeFileSync(join(cwd, ".tapd", "logs", "run.log"), "local log\n");
@@ -91,7 +101,7 @@ test("dirty check ignores only generated local state paths", () => {
 
 test("bind refuses overwrite unless force is explicit", () => {
   const cwd = repo();
-  run(cwd, "init", "--user", "开发者A", "--base", "master");
+  run(cwd, "init", "--base", "master", "--user", "开发者A");
   const first = run(cwd, "bind", "--input", input());
   assert.equal(first.status, 0);
   assert.equal(first.json.context.binding.method, "bind");
@@ -112,7 +122,7 @@ test("bind refuses overwrite unless force is explicit", () => {
 
 test("branch collisions append numeric suffixes", () => {
   const cwd = repo();
-  run(cwd, "init", "--user", "开发者A", "--base", "master");
+  run(cwd, "init", "--base", "master");
   const first = run(cwd, "start", "--input", input());
   assert.equal(first.status, 0);
   git(cwd, "switch", "master");
@@ -140,8 +150,10 @@ test("start reports project initialization and standard URL compatibility", () =
   const cwd = repo();
   const uninitialized = run(cwd, "start", "--input", input());
   assert.equal(uninitialized.json.error.code, "PROJECT_NOT_INITIALIZED");
+  assert.deepEqual(uninitialized.json.error.details.candidates, ["master"]);
+  assert.equal(uninitialized.json.error.details.workspace_id, "12345678");
 
-  run(cwd, "init", "--user", "开发者A", "--base", "master");
+  run(cwd, "init", "--base", "master");
   const started = run(
     cwd,
     "start",
@@ -151,20 +163,20 @@ test("start reports project initialization and standard URL compatibility", () =
   assert.equal(started.status, 0);
   assert.equal(started.json.context.work_item.entity_type, "Task");
   assert.equal(started.json.context.work_item.title, undefined);
-  assert.equal(started.json.context.assignee.display_name, "开发者A");
+  assert.equal(started.json.context.assignee.display_name, "");
 });
 
 test("detect-base returns candidates without writing project config", () => {
   const cwd = repo();
   const detected = run(cwd, "detect-base");
   assert.deepEqual(detected.json.candidates, ["master"]);
-  assert.throws(() => readFileSync(join(cwd, ".tapd", "project.json")));
+  assert.throws(() => readFileSync(join(cwd, ".tapd", "config.json")));
 });
 
 test("start restores original branch when branch creation fails", () => {
   const cwd = repo();
-  run(cwd, "init", "--user", "开发者A", "--base", "master");
-  const projectPath = join(cwd, ".tapd", "project.json");
+  run(cwd, "init", "--base", "master");
+  const projectPath = join(cwd, ".tapd", "config.json");
   const project = JSON.parse(readFileSync(projectPath, "utf8"));
   project.branch.name_template = "invalid..{slug}";
   writeFileSync(projectPath, `${JSON.stringify(project, null, 2)}\n`);
@@ -174,4 +186,105 @@ test("start restores original branch when branch creation fails", () => {
   assert.equal(failed.json.error.code, "BRANCH_CREATE_FAILED");
   assert.equal(failed.json.error.details.restored, true);
   assert.equal(git(cwd, "branch", "--show-current"), "master");
+});
+
+test("init can generate minimal config and configure adds optional identity", () => {
+  const cwd = repo();
+  const initialized = run(
+    cwd,
+    "init",
+    "--base",
+    "master",
+    "--workspace",
+    "12345678",
+  );
+  assert.equal(initialized.status, 0);
+  const configPath = join(cwd, ".tapd", "config.json");
+  const minimal = JSON.parse(readFileSync(configPath, "utf8"));
+  assert.equal(minimal.base_branch, "master");
+  assert.equal(minimal.workspace_id, "12345678");
+  assert.equal(minimal.user_nick, undefined);
+
+  const configured = run(cwd, "configure", "--user", "开发者A");
+  assert.equal(configured.status, 0);
+  const updated = JSON.parse(readFileSync(configPath, "utf8"));
+  assert.equal(updated.user_nick, "开发者A");
+});
+
+test("legacy project config remains readable and configure migrates it", () => {
+  const cwd = repo();
+  mkdirSync(join(cwd, ".tapd"), { recursive: true });
+  writeFileSync(
+    join(cwd, ".tapd", "project.json"),
+    `${JSON.stringify({
+      version: 1,
+      user: { display_name: "开发者A" },
+      git: { base_branch: "master" },
+      branch: {
+        type_map: { Story: "feat", Task: "feat", Bug: "hotfix" },
+        name_template: "{type}/{date}/{slug}",
+        date_format: "YYMMDD",
+        slug_language: "en",
+      },
+      tapd: { workspace_id: "12345678" },
+    })}\n`,
+  );
+  const bound = run(cwd, "bind", "--input", input());
+  assert.equal(bound.status, 0);
+  assert.equal(bound.json.context.assignee.display_name, "开发者A");
+
+  const migrated = run(cwd, "configure", "--user", "开发者B");
+  assert.equal(migrated.status, 0);
+  assert.equal(migrated.json.migrated_from_legacy, true);
+  assert.equal(
+    JSON.parse(readFileSync(join(cwd, ".tapd", "config.json"), "utf8")).user_nick,
+    "开发者B",
+  );
+});
+
+test("prong Story and Task links are accepted", () => {
+  const storyRepo = repo();
+  run(storyRepo, "init", "--base", "master", "--workspace", "12345678");
+  const story = run(
+    storyRepo,
+    "bind",
+    "--input",
+    "https://www.tapd.cn/12345678/prong/stories/view/1112345678000000001",
+  );
+  assert.equal(story.status, 0);
+  assert.equal(story.json.context.work_item.entity_type, "Story");
+
+  const taskRepo = repo();
+  run(taskRepo, "init", "--base", "master", "--workspace", "12345678");
+  const task = run(
+    taskRepo,
+    "bind",
+    "--input",
+    "https://www.tapd.cn/12345678/prong/tasks/view/1112345678000000002",
+  );
+  assert.equal(task.status, 0);
+  assert.equal(task.json.context.work_item.entity_type, "Task");
+});
+
+test("workspace mismatch is rejected before branch creation", () => {
+  const cwd = repo();
+  run(cwd, "init", "--base", "master", "--workspace", "87654321");
+  const result = run(cwd, "start", "--input", input());
+  assert.equal(result.status, 1);
+  assert.equal(result.json.error.code, "WORKSPACE_MISMATCH");
+  assert.equal(git(cwd, "branch", "--show-current"), "master");
+});
+
+test("invalid new and legacy config files keep distinct stable errors", () => {
+  const newConfigRepo = repo();
+  mkdirSync(join(newConfigRepo, ".tapd"), { recursive: true });
+  writeFileSync(join(newConfigRepo, ".tapd", "config.json"), "{bad");
+  const invalidConfig = run(newConfigRepo, "bind", "--input", input());
+  assert.equal(invalidConfig.json.error.code, "INVALID_CONFIG_FILE");
+
+  const legacyRepo = repo();
+  mkdirSync(join(legacyRepo, ".tapd"), { recursive: true });
+  writeFileSync(join(legacyRepo, ".tapd", "project.json"), "{bad");
+  const invalidLegacy = run(legacyRepo, "bind", "--input", input());
+  assert.equal(invalidLegacy.json.error.code, "INVALID_PROJECT_FILE");
 });

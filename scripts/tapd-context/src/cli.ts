@@ -21,11 +21,13 @@ import {
   BranchContext,
   CliError,
   defaultProjectConfig,
+  ProjectConfig,
   WorkItemInput,
 } from "./schema.js";
 import {
+  CONFIG_FILE,
   CONTEXT_FILE,
-  PROJECT_FILE,
+  LEGACY_PROJECT_FILE,
   readContextStore,
   readProject,
   writeContextStore,
@@ -39,6 +41,7 @@ interface ParsedArgs {
 }
 
 const GITIGNORE_SUGGESTION = [
+  ".tapd/config.json",
   ".tapd/project.json",
   ".tapd/context.json",
   ".tapd/logs/",
@@ -78,7 +81,8 @@ function printJson(value: unknown): void {
 
 function usage(): string {
   return [
-    "tapd-context init --user <nick> --base <branch> [--force]",
+    "tapd-context init --base <branch> [--workspace <id>] [--user <nick>] [--force]",
+    "tapd-context configure [--user <nick>] [--base <branch>] [--workspace <id>]",
     "tapd-context start --input <context-json-or-url> [--slug <slug>]",
     "tapd-context bind --input <context-json-or-url> [--force]",
     "tapd-context current [--format json|markdown]",
@@ -134,29 +138,70 @@ function makeContext(
 function init(repoRoot: string, args: ParsedArgs): void {
   const user = optionString(args.options, "user");
   const base = optionString(args.options, "base");
-  if (!user || !base) {
+  const workspace = optionString(args.options, "workspace");
+  if (!base) {
     throw new CliError(
       "INVALID_ARGUMENT",
-      "init 必须显式提供已确认的 --user 和 --base。",
+      "init 必须显式提供已确认的 --base；--workspace 和 --user 可选。",
       { candidates: detectBaseCandidates(repoRoot) },
     );
   }
   assertBaseBranch(repoRoot, base);
 
-  const projectPath = join(repoRoot, PROJECT_FILE);
-  if (existsSync(projectPath) && args.options.force !== true) {
+  const configPath = join(repoRoot, CONFIG_FILE);
+  const legacyPath = join(repoRoot, LEGACY_PROJECT_FILE);
+  if (
+    (existsSync(configPath) || existsSync(legacyPath)) &&
+    args.options.force !== true
+  ) {
     throw new CliError(
       "PROJECT_ALREADY_INITIALIZED",
-      ".tapd/project.json 已存在；如确认覆盖请传 --force。",
+      "TAPD 项目配置已存在；如确认迁移或覆盖请传 --force。",
     );
   }
 
-  writeProject(repoRoot, defaultProjectConfig(user, base));
+  writeProject(repoRoot, defaultProjectConfig(base, workspace, user));
   printJson({
     ok: true,
     action: "init",
-    project_file: PROJECT_FILE,
+    config_file: CONFIG_FILE,
     base_branch: base,
+    ...(workspace ? { workspace_id: workspace } : {}),
+    ...(user ? { user_nick: user } : {}),
+    gitignore_suggestion: GITIGNORE_SUGGESTION,
+  });
+}
+
+function configure(repoRoot: string, args: ParsedArgs): void {
+  const project = readProject(repoRoot);
+  const user = optionString(args.options, "user");
+  const base = optionString(args.options, "base");
+  const workspace = optionString(args.options, "workspace");
+  if (!user && !base && !workspace) {
+    throw new CliError(
+      "INVALID_ARGUMENT",
+      "configure 至少需要 --user、--base 或 --workspace 中的一项。",
+    );
+  }
+  if (base) {
+    assertBaseBranch(repoRoot, base);
+    project.base_branch = base;
+  }
+  if (workspace) {
+    project.workspace_id = workspace;
+  }
+  if (user) {
+    project.user_nick = user;
+  }
+  writeProject(repoRoot, project);
+  printJson({
+    ok: true,
+    action: "configure",
+    config_file: CONFIG_FILE,
+    base_branch: project.base_branch,
+    ...(project.workspace_id ? { workspace_id: project.workspace_id } : {}),
+    ...(project.user_nick ? { user_nick: project.user_nick } : {}),
+    migrated_from_legacy: existsSync(join(repoRoot, LEGACY_PROJECT_FILE)),
     gitignore_suggestion: GITIGNORE_SUGGESTION,
   });
 }
@@ -169,17 +214,48 @@ function detectBase(repoRoot: string): void {
   });
 }
 
+function applyProjectWorkspace(project: ProjectConfig, item: WorkItemInput): void {
+  if (project.workspace_id && item.workspace_id) {
+    if (project.workspace_id !== item.workspace_id) {
+      throw new CliError(
+        "WORKSPACE_MISMATCH",
+        "输入工作项与项目配置属于不同 TAPD workspace。",
+        {
+          configured_workspace_id: project.workspace_id,
+          input_workspace_id: item.workspace_id,
+        },
+      );
+    }
+    return;
+  }
+  if (!item.workspace_id && project.workspace_id) {
+    item.workspace_id = project.workspace_id;
+  }
+}
+
 function start(repoRoot: string, args: ParsedArgs): void {
-  const project = readProject(repoRoot);
   const originalBranch = getCurrentBranch(repoRoot);
   const input = optionString(args.options, "input");
   if (!input) {
     throw new CliError("INVALID_ARGUMENT", "start 必须提供 --input。");
   }
   const item = parseInput(input);
+  let project: ProjectConfig;
+  try {
+    project = readProject(repoRoot);
+  } catch (error) {
+    if (error instanceof CliError && error.code === "PROJECT_NOT_INITIALIZED") {
+      throw new CliError(error.code, error.message, {
+        candidates: detectBaseCandidates(repoRoot),
+        ...(item.workspace_id ? { workspace_id: item.workspace_id } : {}),
+      });
+    }
+    throw error;
+  }
+  applyProjectWorkspace(project, item);
 
   assertCleanWorktree(repoRoot);
-  assertBaseBranch(repoRoot, project.git.base_branch);
+  assertBaseBranch(repoRoot, project.base_branch);
 
   const desired = buildBranchName(
     project,
@@ -191,7 +267,7 @@ function start(repoRoot: string, args: ParsedArgs): void {
   let createdFromCommit = "";
 
   try {
-    switchBranch(repoRoot, project.git.base_branch);
+    switchBranch(repoRoot, project.base_branch);
     createdFromCommit = getHeadCommit(repoRoot);
     createAndSwitchBranch(repoRoot, newBranch);
   } catch (error) {
@@ -254,11 +330,11 @@ function start(repoRoot: string, args: ParsedArgs): void {
   const context = makeContext(
     "start",
     newBranch,
-    project.git.base_branch,
-    project.git.base_branch,
+    project.base_branch,
+    project.base_branch,
     createdFromCommit,
     item,
-    project.user.display_name,
+    project.user_nick || "",
   );
   store.branches[newBranch] = context;
 
@@ -297,7 +373,7 @@ function start(repoRoot: string, args: ParsedArgs): void {
     branch: newBranch,
     context: publicContext(context),
     based_on: {
-      branch: project.git.base_branch,
+      branch: project.base_branch,
       commit: createdFromCommit,
       note: "新分支基于本地 base_branch 当前 HEAD 创建；如需远端最新内容，请先手动更新 base 分支。",
     },
@@ -313,6 +389,7 @@ function bind(repoRoot: string, args: ParsedArgs): void {
     throw new CliError("INVALID_ARGUMENT", "bind 必须提供 --input。");
   }
   const item = parseInput(input);
+  applyProjectWorkspace(project, item);
   const store = readContextStore(repoRoot);
   if (store.branches[branch] && args.options.force !== true) {
     throw new CliError(
@@ -332,11 +409,11 @@ function bind(repoRoot: string, args: ParsedArgs): void {
   const context = makeContext(
     "bind",
     branch,
-    project.git.base_branch,
+    project.base_branch,
     branch,
     getHeadCommit(repoRoot),
     item,
-    project.user.display_name,
+    project.user_nick || "",
   );
   store.branches[branch] = context;
   writeContextStore(repoRoot, store);
@@ -386,6 +463,9 @@ function main(): void {
   switch (args.command) {
     case "init":
       init(repoRoot, args);
+      break;
+    case "configure":
+      configure(repoRoot, args);
       break;
     case "detect-base":
       detectBase(repoRoot);

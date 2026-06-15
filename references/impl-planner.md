@@ -21,6 +21,7 @@ Plan 必须包含：
 - 以 Story+原型为准；tasks 用于组织执行顺序与验收颗粒度。  
 - 发现 tasks 漏拆：补计划步骤，但不擅自扩需求。  
 - 缺后端信息：明确“待联调”项与后续补齐点。  
+- 用户要求“实现、写代码、按任务做、继续开发”时，计划完成后继续执行 `references/development-executor.md`，不得停在方案文本。
 - 若在代码中留下绑定 TAPD 的 TODO/联调注释且含义有实质变化：按 **`references/sync-code-comment-to-tapd.md`** 用 `create_comments` 同步到 Story/Task；评论正文须为 **分点式**（标题行 + 阻塞 + 要点 + 代码锚点 + 关联 + 收尾），推荐 HTML 列表便于 TAPD 渲染。  
 
 ## 输出模板（必须）

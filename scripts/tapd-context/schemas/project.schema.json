@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.local/tapd-context/project.schema.json",
-  "title": "TAPD Project Configuration",
+  "title": "Legacy TAPD Project Configuration",
   "type": "object",
   "required": [
     "version",

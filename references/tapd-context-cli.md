@@ -10,7 +10,8 @@
 
 ```bash
 tapd-context detect-base
-tapd-context init --user "<nick>" --base "<confirmed-branch>" [--force]
+tapd-context init --base "<confirmed-branch>" [--workspace "<id>"] [--user "<nick>"] [--force]
+tapd-context configure [--user "<nick>"] [--base "<branch>"] [--workspace "<id>"]
 tapd-context start --input '<context-json-or-standard-url>' [--slug '<english-slug>']
 tapd-context bind --input '<context-json-or-standard-url>' [--force]
 tapd-context current --format json
@@ -18,11 +19,12 @@ tapd-context current --format markdown
 tapd-context status
 ```
 
-`init` 必须接收已经由 skill 向用户确认的 base，不会静默采用候选值。
+`init` 必须接收已经由 skill 向用户确认的 base，不会静默采用候选值。workspace 可从输入 URL/JSON 取得；user nick 不是初始化必填项。
 
 ## Files
 
-- `.tapd/project.json`：项目用户、base 和分支模板。
+- `.tapd/config.json`：base、workspace、可选用户 nick 和分支模板。
+- `.tapd/project.json`：只读兼容旧版本配置；`configure` 可迁移为 config。
 - `.tapd/context.json`：`branches` 映射。
 
 第一版 context 使用：
@@ -47,7 +49,7 @@ Context JSON 主路径要求：
 - `id`: 总是转换并保存为字符串。
 - `title/user_nick/url/workspace_id`: 可选；缺失时保持缺失。
 
-URL 仅兼容标准 detail 路径。JSON 同时提供 URL 时，URL 解析出的类型、ID 和 workspace 优先，避免绑定错误对象。
+URL 支持标准 detail 路径及 Story/Task prong view 路径。JSON 同时提供 URL 时，URL 解析出的类型、ID 和 workspace 优先，避免绑定错误对象。
 
 ## Git Safety
 
@@ -55,6 +57,7 @@ URL 仅兼容标准 detail 路径。JSON 同时提供 URL 时，URL 解析出的
 
 ```text
 .tapd/project.json
+.tapd/config.json
 .tapd/context.json
 .tapd/logs/**
 ```
@@ -67,6 +70,7 @@ URL 仅兼容标准 detail 路径。JSON 同时提供 URL 时，URL 解析出的
 - `DETACHED_HEAD`
 - `PROJECT_NOT_INITIALIZED`
 - `PROJECT_ALREADY_INITIALIZED`
+- `INVALID_CONFIG_FILE`
 - `INVALID_PROJECT_FILE`
 - `INVALID_CONTEXT_FILE`
 - `CONTEXT_NOT_FOUND`
@@ -76,8 +80,10 @@ URL 仅兼容标准 detail 路径。JSON 同时提供 URL 时，URL 解析出的
 - `UNSUPPORTED_TAPD_URL`
 - `WORKTREE_NOT_CLEAN`
 - `BASE_BRANCH_NOT_FOUND`
+- `WORKSPACE_MISMATCH`
 - `CONTEXT_ALREADY_BOUND`
 - `BRANCH_CREATE_FAILED`
+- `CONFIG_WRITE_FAILED`
 - `CONTEXT_WRITE_FAILED`
 - `RESTORE_FAILED`
 

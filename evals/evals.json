@@ -15,7 +15,7 @@
       "id": "task-update-guard-only-my-owner",
       "input": "帮我把这个 story 下所有【前端】任务的 effort 都改成 2d，并把 owner 都改成 开发者A。",
       "expected": [
-        "必须先确认“我”是谁（当前用户/CURRENT_USER_NICK/脚本/询问）",
+        "必须先确认“我”是谁（Context JSON/config/脚本/询问并可保存）",
         "必须按分隔符切分 owner 并精确匹配“我”，相似昵称和非本人任务跳过并说明",
         "必须先 dry-run 输出将修改清单，再执行更新并回读校验"
       ]
@@ -58,9 +58,9 @@
     },
     {
       "id": "context-dirty-worktree-exact-exclusions",
-      "input": "/tapd 开始新需求；仓库里只有 .tapd/project.json、.tapd/context.json 和 .tapd/logs/run.log 的变化，另一个场景是 .tapd/README.md 有变化。",
+      "input": "/tapd 开始新需求；仓库里只有 .tapd/config.json、旧版 .tapd/project.json、.tapd/context.json 和 .tapd/logs/run.log 的变化，另一个场景是 .tapd/README.md 有变化。",
       "expected": [
-        "前三个 tapd-context 生成路径不阻止 start",
+        "config、旧 project、context 和 logs 这些本地状态路径不阻止 start",
         ".tapd/README.md 必须被视为普通 dirty change 并阻止切分支",
         "不得自动 stash、pull 或修改 .gitignore"
       ]
@@ -81,6 +81,42 @@
         "允许创建用例但明确未关联 Story",
         "create_comments 返回成功时说明写入成功但无法评论列表回读",
         "不得假设 get_comments 或 entity_relations 存在"
+      ]
+    },
+    {
+      "id": "first-use-generates-minimal-config",
+      "input": "我已经装好 skill 和只带 token 的 TAPD MCP。现在在这个业务仓库里开始做 https://www.tapd.cn/12345678/prong/stories/view/1112345678000000001",
+      "expected": [
+        "不得要求额外 clone 项目或手工创建配置",
+        "探测并展示 base 候选，确认后生成 .tapd/config.json",
+        "使用 URL workspace 初始化，再补全标题和英文 slug 后创建分支"
+      ]
+    },
+    {
+      "id": "task-intake-resolves-parent-story",
+      "input": "开始处理这个 Task：https://www.tapd.cn/12345678/prong/tasks/view/1112345678000000002，读完需求后直接实现。",
+      "expected": [
+        "先读取 Task 并取得 story_id，不得把 task ID 当 story ID",
+        "再读取父 Story description 和同 Story tasks",
+        "以当前 Task 为执行焦点，父 Story 作为需求边界"
+      ]
+    },
+    {
+      "id": "continue-development-uses-context-and-diff",
+      "input": "/tapd 继续开发，接着上次没做完的地方完成代码和测试。",
+      "expected": [
+        "没有新工作项输入时恢复当前分支 context",
+        "读取 git diff 和现有测试判断停点，不根据 local_phase 猜进度",
+        "实施代码、运行验证并报告剩余待联调项"
+      ]
+    },
+    {
+      "id": "finish-does-not-auto-transition-status",
+      "input": "这个需求做完了，帮我收尾，给出提交信息并登记今天 3 小时工时。",
+      "expected": [
+        "先执行本地测试和 Story/Task 验收复核",
+        "有 get_commit_msg 时生成 TAPD 提交关键字，工时写入先 dry-run 并查重",
+        "不得自动提交 .tapd 文件或流转 TAPD 状态"
       ]
     }
   ]

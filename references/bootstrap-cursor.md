@@ -15,12 +15,9 @@
   "mcpServers": {
     "tapd-mcp": {
       "command": "uvx",
-      "args": ["mcp-server-tapd"],
+      "args": ["mcp-server-tapd==8.0.78"],
       "env": {
-        "TAPD_ACCESS_TOKEN": "<token>",
-        "TAPD_API_BASE_URL": "https://api.tapd.cn",
-        "TAPD_BASE_URL": "https://www.tapd.cn",
-        "CURRENT_USER_NICK": "<nick>"
+        "TAPD_ACCESS_TOKEN": "<token>"
       }
     }
   }
@@ -28,6 +25,7 @@
 ```
 
 仅在用户授权后最小 patch `mcpServers.tapd-mcp`，保留其他 server 和未知键。
+个人 token 是唯一必填环境变量。
 
 ## Reload and probe
 

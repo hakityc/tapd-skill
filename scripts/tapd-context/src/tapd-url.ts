@@ -2,6 +2,8 @@ import { CliError, normalizeWorkItem, WorkItemInput } from "./schema.js";
 
 const STANDARD_DETAIL_PATH =
   /^\/tapd_fe\/([^/]+)\/(story|task|bug)\/detail\/([^/?#]+)\/?$/i;
+const PRONG_VIEW_PATH =
+  /^\/([^/]+)\/prong\/(stories|tasks)\/view\/([^/?#]+)\/?$/i;
 
 export function parseTapdUrl(rawUrl: string): WorkItemInput {
   let url: URL;
@@ -16,19 +18,33 @@ export function parseTapdUrl(rawUrl: string): WorkItemInput {
   }
 
   const match = url.pathname.match(STANDARD_DETAIL_PATH);
-  if (!match) {
+  const prongMatch = url.pathname.match(PRONG_VIEW_PATH);
+  const identity = match
+    ? {
+        workspaceId: match[1],
+        entityType: match[2],
+        id: match[3],
+      }
+    : prongMatch
+      ? {
+          workspaceId: prongMatch[1],
+          entityType: prongMatch[2] === "stories" ? "story" : "task",
+          id: prongMatch[3],
+        }
+      : undefined;
+  if (!identity) {
     throw new CliError(
       "UNSUPPORTED_TAPD_URL",
-      "P0 仅支持标准 Story、Task、Bug detail 链接。",
+      "仅支持标准 detail 链接和 Story/Task prong view 链接。",
       { url: rawUrl },
     );
   }
 
   return normalizeWorkItem({
     source: "tapd",
-    workspace_id: match[1],
-    entity_type: match[2],
-    id: decodeURIComponent(match[3]),
+    workspace_id: identity.workspaceId,
+    entity_type: identity.entityType,
+    id: decodeURIComponent(identity.id),
     url: url.toString(),
   });
 }

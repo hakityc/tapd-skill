@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "base_branch": "master",
+  "workspace_id": "12345678",
+  "user_nick": "开发者A",
+  "branch": {
+    "type_map": {
+      "Story": "feat",
+      "Task": "feat",
+      "Bug": "hotfix"
+    },
+    "name_template": "{type}/{date}/{slug}",
+    "date_format": "YYMMDD",
+    "slug_language": "en"
+  }
+}

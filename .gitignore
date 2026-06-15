@@ -4,6 +4,7 @@ __pycache__/
 .DS_Store
 
 # Local TAPD context created in repositories where this skill is used.
+.tapd/config.json
 .tapd/project.json
 .tapd/context.json
 .tapd/logs/

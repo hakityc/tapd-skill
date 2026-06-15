@@ -6,6 +6,16 @@
 
 用户提供 token 时不要在对话或日志中回显。配置完成后必须 reload/restart，并重新执行只读探测及目标工具存在性检查。
 
+当前兼容基线：
+
+- `mcp-server-tapd==8.0.78`
+- 验证日期：2026-06-15
+- `uv`
+- Python 3.13+
+- MCP 配置只要求 `TAPD_ACCESS_TOKEN`
+
+`TAPD_API_BASE_URL`、`TAPD_BASE_URL` 和 `CURRENT_USER_NICK` 不是云端 TAPD 的默认必填项。私有部署需要覆盖域名时再单独增加。
+
 ## Platform status
 
 | 平台 | 配置来源 | 当前验证状态 | 自动 patch |

@@ -10,7 +10,8 @@ import {
   validateProjectConfig,
 } from "./schema.js";
 
-export const PROJECT_FILE = join(".tapd", "project.json");
+export const CONFIG_FILE = join(".tapd", "config.json");
+export const LEGACY_PROJECT_FILE = join(".tapd", "project.json");
 export const CONTEXT_FILE = join(".tapd", "context.json");
 
 function readJson(path: string, errorCode: string): unknown {
@@ -26,18 +27,30 @@ function readJson(path: string, errorCode: string): unknown {
 }
 
 export function readProject(repoRoot: string): ProjectConfig {
-  const path = join(repoRoot, PROJECT_FILE);
+  const configPath = join(repoRoot, CONFIG_FILE);
+  const legacyPath = join(repoRoot, LEGACY_PROJECT_FILE);
   try {
-    return validateProjectConfig(readJson(path, "INVALID_PROJECT_FILE"));
+    return validateProjectConfig(readJson(configPath, "INVALID_CONFIG_FILE"));
   } catch (error) {
     const cause = error as NodeJS.ErrnoException;
-    if (cause.code === "ENOENT") {
-      throw new CliError(
-        "PROJECT_NOT_INITIALIZED",
-        "尚未初始化 .tapd/project.json，请先执行 tapd-context init。",
-      );
+    if (cause.code !== "ENOENT") {
+      throw error;
     }
-    throw error;
+  }
+  try {
+    return validateProjectConfig(readJson(legacyPath, "INVALID_PROJECT_FILE"));
+  } catch (error) {
+    const cause = error as NodeJS.ErrnoException;
+    if (cause.code !== "ENOENT") {
+      if (error instanceof CliError && error.code === "INVALID_CONFIG_FILE") {
+        throw new CliError("INVALID_PROJECT_FILE", ".tapd/project.json 配置无效。");
+      }
+      throw error;
+    }
+    throw new CliError(
+      "PROJECT_NOT_INITIALIZED",
+      "尚未初始化 .tapd/config.json，请先执行 tapd-context init。",
+    );
   }
 }
 
@@ -71,7 +84,7 @@ export function writeJsonAtomic(path: string, value: unknown, errorCode: string)
 }
 
 export function writeProject(repoRoot: string, config: ProjectConfig): void {
-  writeJsonAtomic(join(repoRoot, PROJECT_FILE), config, "PROJECT_WRITE_FAILED");
+  writeJsonAtomic(join(repoRoot, CONFIG_FILE), config, "CONFIG_WRITE_FAILED");
 }
 
 export function writeContextStore(repoRoot: string, store: ContextStore): void {

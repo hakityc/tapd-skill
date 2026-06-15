@@ -7,7 +7,7 @@
 - 首次 init 的 base 候选必须展示并确认。
 - 已有配置、已有绑定或新旧工作项冲突时默认不覆盖。
 - 不执行 pull、stash、强制 checkout、自动删分支、自动提交或修改 `.gitignore`。
-- dirty 检查仅豁免 `.tapd/project.json`、`.tapd/context.json`、`.tapd/logs/**`。
+- dirty 检查仅豁免 `.tapd/config.json`、兼容旧版的 `.tapd/project.json`、`.tapd/context.json`、`.tapd/logs/**`。
 - JSON 使用原子写入；损坏文件停止处理，不用空文件覆盖。
 
 ## TAPD 远端写入

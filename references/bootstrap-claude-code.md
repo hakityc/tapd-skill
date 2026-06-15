@@ -9,13 +9,15 @@
 ## Command draft
 
 ```bash
+read -s TAPD_ACCESS_TOKEN
+export TAPD_ACCESS_TOKEN
 claude mcp add --scope user \
-  --env TAPD_ACCESS_TOKEN=<token> \
-  --env TAPD_API_BASE_URL=https://api.tapd.cn \
-  --env TAPD_BASE_URL=https://www.tapd.cn \
-  --env CURRENT_USER_NICK=<nick> \
-  tapd-mcp -- uvx mcp-server-tapd
+  --env TAPD_ACCESS_TOKEN="$TAPD_ACCESS_TOKEN" \
+  tapd-mcp -- uvx mcp-server-tapd==8.0.78
+unset TAPD_ACCESS_TOKEN
 ```
+
+个人 token 是唯一必填 MCP 配置。版本 `8.0.78` 已作为当前兼容基线，但本平台启动流程仍标记为未完整验证。
 
 优先使用官方 CLI，不直接 patch 未确认的 Claude 配置文件。
 
