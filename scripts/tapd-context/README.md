@@ -20,8 +20,9 @@ tapd-context current --format json
 tapd-context status
 ```
 
-`--input` 的首选格式是 TAPD Context JSON。兼容标准 Story、Task、Bug detail URL
-和 Story/Task prong view URL。URL 缺少标题或用户时，CLI 保持缺失，不生成虚假值。
+`--input` 的首选格式是 TAPD Context JSON。兼容标准 Story、Task、Bug detail URL、
+Story/Task prong view URL 和 Bug bugtrace view URL。URL 缺少标题或用户时，
+CLI 保持缺失，不生成虚假值。
 
 ## Local files
 

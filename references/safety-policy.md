@@ -46,5 +46,7 @@ owner 字段可能是：
 
 - 不输出 token、Authorization header 或包含 token 的异常。
 - MCP/HTTP 失败不得宣称已写入。
-- 未文档化 fallback 不执行。
-- P0 的未验证 OpenAPI fallback 默认只生成请求草案。
+- TAPD 远端读写只通过运行时 MCP 工具执行。
+- 必需工具缺失时先 bootstrap、升级或 reload；仍缺失则停止远端步骤。
+- Skill 不读取 MCP 子进程 token，也不直接调用 TAPD OpenAPI。
+- MCP 写入后的回读失败统一标记“写入未确认”。

@@ -1,6 +1,7 @@
 import { CliError, normalizeWorkItem } from "./schema.js";
 const STANDARD_DETAIL_PATH = /^\/tapd_fe\/([^/]+)\/(story|task|bug)\/detail\/([^/?#]+)\/?$/i;
 const PRONG_VIEW_PATH = /^\/([^/]+)\/prong\/(stories|tasks)\/view\/([^/?#]+)\/?$/i;
+const BUGTRACE_VIEW_PATH = /^\/([^/]+)\/bugtrace\/bugs\/view\/([^/?#]+)\/?$/i;
 export function parseTapdUrl(rawUrl) {
     let url;
     try {
@@ -14,6 +15,7 @@ export function parseTapdUrl(rawUrl) {
     }
     const match = url.pathname.match(STANDARD_DETAIL_PATH);
     const prongMatch = url.pathname.match(PRONG_VIEW_PATH);
+    const bugtraceMatch = url.pathname.match(BUGTRACE_VIEW_PATH);
     const identity = match
         ? {
             workspaceId: match[1],
@@ -26,9 +28,15 @@ export function parseTapdUrl(rawUrl) {
                 entityType: prongMatch[2] === "stories" ? "story" : "task",
                 id: prongMatch[3],
             }
-            : undefined;
+            : bugtraceMatch
+                ? {
+                    workspaceId: bugtraceMatch[1],
+                    entityType: "bug",
+                    id: bugtraceMatch[2],
+                }
+                : undefined;
     if (!identity) {
-        throw new CliError("UNSUPPORTED_TAPD_URL", "仅支持标准 detail 链接和 Story/Task prong view 链接。", { url: rawUrl });
+        throw new CliError("UNSUPPORTED_TAPD_URL", "仅支持标准 detail、Story/Task prong view 和 Bug bugtrace view 链接。", { url: rawUrl });
     }
     return normalizeWorkItem({
         source: "tapd",

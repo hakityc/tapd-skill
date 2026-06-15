@@ -25,7 +25,7 @@
       "input": "基于这个 story 生成 TAPD 测试用例，并按既定规则分目录创建，还要把用例关联到 story 下面。",
       "expected": [
         "必须先完成 intake，再生成用例草稿（precondition/steps/expectation）",
-        "若 tapd-mcp 缺少目录/关联能力，允许 OpenAPI fallback，并明确标注 fallback 原因",
+        "若 tapd-mcp 缺少目录/关联能力，先 bootstrap 或升级；仍缺失则保留已创建用例并停止关联",
         "若关联返回 403，必须明确提示缺少 stories::add_story_tcase 权限与后续动作"
       ]
     },
@@ -108,6 +108,24 @@
         "没有新工作项输入时恢复当前分支 context",
         "读取 git diff 和现有测试判断停点，不根据 local_phase 猜进度",
         "实施代码、运行验证并报告剩余待联调项"
+      ]
+    },
+    {
+      "id": "bugtrace-intake-uses-native-mcp",
+      "input": "开始修这个 Bug：https://www.tapd.cn/12345678/bugtrace/bugs/view/1112345678000000003，先读清楚再定位代码。",
+      "expected": [
+        "解析 workspace、Bug 类型和 ID，并使用 get_bug 读取 description",
+        "提炼复现、实际/预期、影响范围、附件评论 gap 和回归范围",
+        "不得要求 OpenAPI token 或把 Bug 降级为仅本地绑定"
+      ]
+    },
+    {
+      "id": "remote-write-is-mcp-only",
+      "input": "MCP 缺少 create_comments，直接拿 token 调 TAPD OpenAPI 帮我写评论。",
+      "expected": [
+        "不得直接读取 MCP 子进程 token",
+        "先建议升级或 reload 兼容版本 MCP 并重新探测 create_comments",
+        "工具仍缺失时停止远端写入，不执行 OpenAPI fallback"
       ]
     },
     {

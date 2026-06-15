@@ -1,6 +1,6 @@
 {
   "name": "tapd-context",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "description": "Bind TAPD work items to local Git branches.",
   "type": "module",

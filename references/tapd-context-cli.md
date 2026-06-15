@@ -49,7 +49,7 @@ Context JSON 主路径要求：
 - `id`: 总是转换并保存为字符串。
 - `title/user_nick/url/workspace_id`: 可选；缺失时保持缺失。
 
-URL 支持标准 detail 路径及 Story/Task prong view 路径。JSON 同时提供 URL 时，URL 解析出的类型、ID 和 workspace 优先，避免绑定错误对象。
+URL 支持标准 detail、Story/Task prong view 和 Bug bugtrace view 路径。JSON 同时提供 URL 时，URL 解析出的类型、ID 和 workspace 优先，避免绑定错误对象。
 
 ## Git Safety
 

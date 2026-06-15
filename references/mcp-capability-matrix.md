@@ -7,22 +7,22 @@
 3. 不通过调用写工具来“探测”能力。
 4. 工具名可能随 MCP 版本变化；按当前暴露 schema 判断，不假定存在。
 
-## P0 Matrix
+## Runtime Matrix
 
 | Workflow | 必需能力 | 可选/待探测能力 | 缺失处理 |
 |---|---|---|---|
-| Story/Task intake | `get_stories_or_tasks` | `get_image` | 缺读取工具则停止；缺图片工具则列出未读取原型 |
+| Story/Task intake | `get_stories_or_tasks` | `get_image`, `get_entity_attachments` | 缺读取工具则 bootstrap/升级后停止；缺图片工具则列出未读取原型 |
+| Bug intake | `get_bug` | `get_entity_attachments`, `get_comments`, `get_entity_relations` | 缺 `get_bug` 则只保留本地绑定并要求修复 MCP；可选信息缺失时列出 gap |
+| Bug 创建/更新 | `create_bug` / `update_bug` | `get_bug` 用于回读 | 缺写工具则只输出 dry-run，不直接调用 OpenAPI |
 | Task 创建 | `get_stories_or_tasks`, `create_story_or_task` | 无 | 缺创建工具则只输出 dry-run |
 | Task 更新 | `get_stories_or_tasks`, `update_story_or_task` | 无 | 缺更新工具则只输出 dry-run |
-| Plan | Story/Task intake 能力 | `create_comments` | 仍可产出计划；不能同步评论时明确说明 |
+| Plan | 对应 Story/Task/Bug intake 能力 | `create_comments` | 仍可产出计划；不能同步评论时明确说明 |
 | 评论同步 | `create_comments` | `get_comments` | 缺创建工具则不写；缺读取工具可依据成功返回说明无法列表回读 |
-| Tcase 创建 | `create_or_update_tcases` 或 `create_tcases_batch` | `get_tcases`, `entity_relations` | 能创建就创建；缺关联工具时说明未关联 Story |
+| Tcase 创建 | `create_or_update_tcases` 或 `create_tcases_batch` | `get_tcases`, `entity_relations`, `get_entity_relations` | 能创建就创建；缺关联工具时说明未关联 Story |
 | Schedule | `get_stories_or_tasks` | `update_story_or_task` | 默认只建议；明确写回但缺更新工具时停止 |
-| 开发执行 | Story/Task intake 能力 | `create_comments` | 本地编码与测试可继续；远端同步按能力降级 |
+| 开发执行 | 对应 Story/Task/Bug intake 能力 | `create_comments` | 本地编码与测试可继续；远端同步按能力降级 |
 | 开发收尾 | 无，本地验证可执行 | `get_commit_msg`, `get_timesheets`, `add_timesheets`, `update_timesheets`, `create_comments` | 分别生成提交/工时/评论草案，不阻塞本地收尾 |
-| Bug | 无，本地 context 可用 | `get_bug` 或等价读取工具 | 缺读取能力只绑定，不进入完整 intake |
-
-`get_bug`、`get_comments`、`entity_relations` 都是可选/待探测能力，不得写成 MCP 必然提供。
+兼容基线 [`mcp-server-tapd==8.0.78`](https://pypi.org/project/mcp-server-tapd/8.0.78/) 的发布包源码已注册 `get_bug`、`create_bug`、`update_bug`、`get_comments`、`get_entity_relations` 和 `entity_relations`。运行时仍以实际暴露的工具为准，避免旧版本或宿主工具过滤造成误判。
 
 ## Current user
 
@@ -35,11 +35,11 @@
 
 不得假设 Agent 能读取 MCP 子进程环境变量。
 
-## Fallback
+## Missing capability
 
-- 只允许使用 `openapi-fallback.md` 中有完整契约的 endpoint。
-- P0 未验证写 fallback 只生成草案，不自动发送。
-- 没有文档化 fallback 时停止并报告缺少的工具。
+- 先检查 MCP 是否为兼容基线版本，并按 `mcp-bootstrap.md` reload/restart 后重新探测。
+- 必需工具仍缺失时停止远端步骤并列出缺少的工具。
+- 不从 skill 直接读取 token，不绕过 MCP 调用 OpenAPI。
 
 ## 回读语义
 

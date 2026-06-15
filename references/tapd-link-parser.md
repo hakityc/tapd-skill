@@ -10,6 +10,7 @@ https://<host>/tapd_fe/<workspace_id>/task/detail/<task_id>
 https://<host>/tapd_fe/<workspace_id>/bug/detail/<bug_id>
 https://<host>/<workspace_id>/prong/stories/view/<story_id>
 https://<host>/<workspace_id>/prong/tasks/view/<task_id>
+https://<host>/<workspace_id>/bugtrace/bugs/view/<bug_id>
 ```
 
 输出 `workspace_id`、规范化 `entity_type`、字符串 `id` 和原 URL。
@@ -22,7 +23,6 @@ Context JSON 是首选输入。若 JSON 含标准 URL，URL 身份覆盖冲突�
 
 以下格式不属于 P0 硬验收：
 
-- bugtrace 链接
 - mini-project 链接
 - 只给短 ID
 

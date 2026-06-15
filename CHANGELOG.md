@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.1 - 2026-06-15
+
+- Promote Bug intake to the main MCP workflow.
+- Support TAPD Bug bugtrace view URLs.
+- Keep all TAPD remote reads and writes behind MCP tools.
+- Remove the direct OpenAPI fallback path.
+
 ## 1.1.0 - 2026-06-15
 
 - Generate minimal `.tapd/config.json` on first use after base confirmation.

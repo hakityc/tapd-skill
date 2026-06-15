@@ -44,7 +44,7 @@
      - `type`: `功能测试`  
    - `category_id` 若用户未提供：先不填（使用 TAPD 默认目录）  
 6. **关联 Story（独立步骤）**
-   - 只有运行时存在 `entity_relations` 或用户特别授权使用已文档化的未验证 fallback 时才关联  
+   - 只有运行时存在 `entity_relations` 时才关联
    - 缺少关联能力不回滚已创建用例，明确输出“用例已创建，但未关联 Story”  
 7. **回显结果**  
    - 返回每条用例的链接（`{tapd_base_url}/{workspace_id}/sparrow/tcase/view/{id}`）  
@@ -62,7 +62,7 @@
 
 ## 失败处理
 
-- MCP 接口失败：停止写入，先完成 bootstrap + Reload，再重试。  
+- MCP 接口失败：停止写入，先完成 bootstrap + Reload，再重试；不绕过 MCP 直接调用 OpenAPI。
 - intake 信息不全（无原型/无描述）：先输出“缺失信息清单”，并只生成最小可用用例集合。  
 - 关联 Story 返回 403：说明当前 token/用户缺少返回中指明的权限（常见为 `stories::add_story_tcase`），保留已创建用例并将关联标记为失败。  
 
@@ -70,7 +70,7 @@
 
 按以下结构输出：
 
-- **Summary**：创建/更新了多少条；是否发生 fallback；是否发生权限不足  
+- **Summary**：创建/更新了多少条；是否完成关联；是否发生权限不足
 - **Links**：用例链接列表  
 - **Coverage**：must/should 覆盖清单  
 - **Gaps**：未覆盖点与原因  

@@ -266,6 +266,23 @@ test("prong Story and Task links are accepted", () => {
   assert.equal(task.json.context.work_item.entity_type, "Task");
 });
 
+test("bugtrace Bug links are accepted", () => {
+  const cwd = repo();
+  run(cwd, "init", "--base", "master", "--workspace", "12345678");
+
+  const result = run(
+    cwd,
+    "bind",
+    "--input",
+    "https://www.tapd.cn/12345678/bugtrace/bugs/view/1112345678000000003",
+  );
+
+  assert.equal(result.status, 0);
+  assert.equal(result.json.context.work_item.entity_type, "Bug");
+  assert.equal(result.json.context.work_item.id, "1112345678000000003");
+  assert.equal(result.json.context.work_item.workspace_id, "12345678");
+});
+
 test("workspace mismatch is rejected before branch creation", () => {
   const cwd = repo();
   run(cwd, "init", "--base", "master", "--workspace", "87654321");
