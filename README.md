@@ -21,6 +21,30 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 - Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
 - Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
 
+## Why Branch Binding
+
+TAPD is the requirement context. Git branch is the code context.
+
+Binding them lets the agent know, in any later session:
+
+- which Story, Task, or Bug the current branch is for
+- where to reload requirement details, parent Story, related tasks, Bug notes, and comments
+- what to validate before wrap-up
+- which TAPD item should receive comments, timesheet drafts, or completion notes
+
+This solves the most common AI coding problem: context resets between sessions.
+
+## Daily Workflow
+
+| Scenario | Say | What the skill does |
+|---|---|---|
+| Start a Story | `/tapd start <Story link>` | Creates a branch, binds TAPD, reads the requirement |
+| Start a Task | `/tapd start <Task link>` | Reads the Task and resolves its parent Story |
+| Fix a Bug | `/tapd fix <Bug link>` | Reads reproduction, impact, comments, and regression scope |
+| Continue work | `/tapd continue` | Restores context from the current Git branch |
+| Wrap up | `/tapd wrap up` | Checks changes, runs validation, drafts comments and timesheets |
+| Standup | `/tapd standup brief` | Summarizes done, in progress, risks, and next work |
+
 ## Install
 
 ```bash
