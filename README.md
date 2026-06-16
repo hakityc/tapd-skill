@@ -1,46 +1,52 @@
 # TAPD Skill
 
-面向 AI 编程代理的 TAPD 研发工作流 skill。它能读取 TAPD Story、Task、Bug，绑定 Git 分支上下文，辅助需求分析、拆任务、写代码、测试、收尾和生成简短日报。
+A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Task, and Bug items, binds them to Git branch context, and helps with requirement intake, task planning, coding, testing, wrap-up, and concise daily briefs.
 
 [![skills.sh](https://skills.sh/b/hakityc/tapd-skill)](https://skills.sh/hakityc/tapd-skill/tapd)
 
-> 示例中的 workspace、工作项 ID、昵称和需求标题均为虚构数据。
+<!-- README-I18N:START -->
 
-## 能做什么
+**English** | [简体中文](./README.zh-CN.md)
 
-- 粘贴 Story/Task/Bug 链接后读取需求、任务、缺陷和原型信息。
-- 首次使用时在业务仓库生成本地 `.tapd/config.json`，并创建开发分支。
-- 后续会话从当前分支恢复 TAPD 上下文，继续计划、编码、测试或收尾。
-- Task 会回溯父 Story，Bug 会整理复现、影响、关联需求和回归范围。
-- 创建/更新任务、测试用例、评论、工时前先 dry-run，并按 MCP 能力回读。
-- 生成简短日报/站会简报：今日完成、进行中、风险、明日计划、数据统计。
+<!-- README-I18N:END -->
 
-## 安装
+> The workspace IDs, work item IDs, nicknames, and requirement titles in this repository are fictional examples.
+
+## What It Does
+
+- Reads requirements, tasks, bugs, and prototype information after you paste a Story/Task/Bug link.
+- Generates local `.tapd/config.json` in a business repository on first use, then creates a development branch.
+- Restores TAPD context from the current branch in later sessions so you can continue planning, coding, testing, or wrapping up.
+- Resolves a Task back to its parent Story; summarizes Bug reproduction steps, impact, related requirements, and regression scope.
+- Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
+- Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
+
+## Install
 
 ```bash
 npx skills add hakityc/tapd-skill --skill tapd --global --agent codex --yes
 ```
 
-其他代理也可以安装：
+Other agents can install it too:
 
 ```bash
 npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --yes
 ```
 
-## 最简配置
+## Minimal Setup
 
-团队成员只需要配置 TAPD MCP token。Skill 本身不保存 token。
+Team members only need to configure a TAPD MCP token. The skill itself does not store tokens.
 
-推荐使用 [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)，当前兼容基线为 `mcp-server-tapd==8.0.78`。平台配置细节见 [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)。
+Use [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/) if possible. The current compatibility baseline is `mcp-server-tapd==8.0.78`. See [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md) for platform setup details.
 
-首次在业务仓库粘贴 TAPD 链接时，Skill 会：
+When you paste a TAPD link in a business repository for the first time, the skill will:
 
-1. 探测 Git base 分支候选。
-2. 让用户确认 base。
-3. 生成 `.tapd/config.json`。
-4. 创建开发分支并绑定当前工作项。
+1. Detect Git base branch candidates.
+2. Ask you to confirm the base branch.
+3. Generate `.tapd/config.json`.
+4. Create a development branch and bind the current work item.
 
-生成的本地配置类似：
+The generated local config looks like this:
 
 ```json
 {
@@ -50,7 +56,7 @@ npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --ye
 }
 ```
 
-## 常用方式
+## Common Usage
 
 ```text
 /tapd 开始做 https://www.tapd.cn/12345678/prong/stories/view/1112345678000000001
@@ -59,7 +65,7 @@ npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --ye
 /tapd 生成今天的站会简报，workspace_id=12345678，当前用户=开发者A
 ```
 
-支持的常见链接：
+Supported common link forms:
 
 ```text
 /tapd_fe/<workspace_id>/story/detail/<story_id>
@@ -70,9 +76,9 @@ npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --ye
 /<workspace_id>/bugtrace/bugs/view/<bug_id>
 ```
 
-## 本地文件
+## Local Files
 
-Skill 只会在业务仓库写本地状态：
+The skill only writes local state in the business repository:
 
 ```text
 .tapd/config.json
@@ -80,7 +86,7 @@ Skill 只会在业务仓库写本地状态：
 .tapd/logs/
 ```
 
-建议手工加入项目 `.gitignore`：
+Recommended project `.gitignore` entries:
 
 ```gitignore
 .tapd/config.json
@@ -89,28 +95,28 @@ Skill 只会在业务仓库写本地状态：
 .tapd/logs/
 ```
 
-CLI 不会自动修改 `.gitignore`。
+The CLI never edits `.gitignore` automatically.
 
-## 安全边界
+## Safety Boundaries
 
-- 不执行 `git pull`、`git stash`，不自动提交 `.tapd`。
-- 不自动流转 TAPD 状态。
-- TAPD 远端读写只通过 MCP，不直接调用 OpenAPI。
-- 远端写入默认 dry-run + 用户确认。
-- owner 使用精确匹配，避免相似昵称误写。
-- dirty worktree 检查只排除 `.tapd/config.json`、`.tapd/project.json`、`.tapd/context.json` 和 `.tapd/logs/**`。
+- Does not run `git pull` or `git stash`, and does not auto-commit `.tapd`.
+- Does not automatically transition TAPD statuses.
+- Reads and writes TAPD remotely only through MCP; it does not call OpenAPI directly.
+- Uses dry-run plus user confirmation before remote writes.
+- Matches owners exactly to avoid writing to similar nicknames.
+- Dirty worktree checks only exclude `.tapd/config.json`, `.tapd/project.json`, `.tapd/context.json`, and `.tapd/logs/**`.
 
-## 运行要求
+## Runtime Requirements
 
-用户运行：
+For users:
 
 - Git
 - Node.js 18+
-- TAPD MCP：uv、Python 3.13+、`mcp-server-tapd`
+- TAPD MCP: uv, Python 3.13+, `mcp-server-tapd`
 
-`tapd-context` 已提交 bundled `dist`，用户不需要安装 npm 依赖。
+`tapd-context` ships with bundled `dist`, so users do not need npm dependencies.
 
-## 开发验证
+## Development Validation
 
 ```bash
 cd scripts/tapd-context
@@ -120,6 +126,6 @@ cd ../..
 python3 scripts/quick_validate.py .
 ```
 
-## 说明
+## Note
 
-本项目是社区工作流工具，不代表 TAPD 官方。使用写入能力前，请确认 token 权限、目标 workspace 和 dry-run 内容。
+This is a community workflow tool and is not affiliated with TAPD. Before using write capabilities, confirm token permissions, the target workspace, and the dry-run content.
