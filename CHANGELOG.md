@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.0 - 2026-06-16
+
+- Move default branch context storage from `.tapd/context.json` to `$GIT_DIR/tapd-context`.
+- Add personal TAPD context cache under `~/.tapd-context/cache` and generated `.tapd/active-context.md`.
+- Add branch-name recovery for `tapd-story|task|bug-<id>` branches.
+- Add `sync`, `refresh`, `doctor`, `hook`, and `logout` CLI commands.
+- Keep legacy `.tapd/context.json` as read-only migration input.
+
 ## 1.2.0 - 2026-06-16
 
 - Add a read-only TAPD daily/standup brief workflow.

@@ -1,12 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 
 const cli = fileURLToPath(new URL("../dist/cli.js", import.meta.url));
+const contextHomes = new Map();
 
 function git(cwd, ...args) {
   return execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
@@ -23,10 +24,21 @@ function repo() {
   return cwd;
 }
 
+function contextHome(cwd) {
+  if (!contextHomes.has(cwd)) {
+    contextHomes.set(cwd, mkdtempSync(join(tmpdir(), "tapd-context-home-")));
+  }
+  return contextHomes.get(cwd);
+}
+
 function run(cwd, ...args) {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd,
     encoding: "utf8",
+    env: {
+      ...process.env,
+      TAPD_CONTEXT_HOME: contextHome(cwd),
+    },
   });
   const output = result.stdout.trim();
   return {
@@ -66,20 +78,24 @@ test("init, start, current and status form the P0 happy path", () => {
 
   const started = run(cwd, "start", "--input", input());
   assert.equal(started.status, 0);
-  assert.match(started.json.branch, /^feat\/\d{6}\/order-approval-risk-flag$/);
+  assert.match(started.json.branch, /^feat\/tapd-story-1112345678000000001-order-approval-risk-flag$/);
   assert.equal(started.json.context.binding.method, "start");
   assert.equal(started.json.context.status.local_phase, "initialized");
   assert.equal(started.json.context.status.progress, undefined);
   assert.match(started.json.based_on.note, /本地 base_branch 当前 HEAD/);
+  assert.equal(existsSync(join(cwd, ".tapd", "context.json")), false);
+  assert.equal(existsSync(join(cwd, ".tapd", "active-context.md")), true);
 
   const current = run(cwd, "current", "--format", "json");
   assert.equal(current.status, 0);
   assert.equal(current.json.context.work_item.id, "1112345678000000001");
+  assert.equal(current.json.context.source, "git-dir-binding");
   assert.equal(current.stdout.includes("raw"), false);
 
   const status = run(cwd, "status");
   assert.equal(status.status, 0);
   assert.match(status.stdout, /当前分支：feat\//);
+  assert.match(status.stdout, /来源：git-dir-binding/);
   assert.equal(status.stdout.includes("raw"), false);
 });
 
@@ -144,6 +160,70 @@ test("current returns stable errors for missing, invalid and detached context", 
   git(cwd, "checkout", "--detach");
   const detached = run(cwd, "current");
   assert.equal(detached.json.error.code, "DETACHED_HEAD");
+});
+
+test("legacy .tapd/context.json is read-only and migrated to git-dir storage", () => {
+  const cwd = repo();
+  run(cwd, "init", "--base", "master", "--workspace", "12345678");
+  mkdirSync(join(cwd, ".tapd"), { recursive: true });
+  const now = new Date().toISOString();
+  writeFileSync(
+    join(cwd, ".tapd", "context.json"),
+    `${JSON.stringify(
+      {
+        version: 1,
+        branches: {
+          master: {
+            branch: "master",
+            created_at: now,
+            updated_at: now,
+            binding: { method: "bind" },
+            git: {
+              base_branch: "master",
+              source_branch: "master",
+              created_from_commit: git(cwd, "rev-parse", "HEAD"),
+            },
+            work_item: {
+              source: "tapd",
+              entity_type: "Story",
+              id: "legacy-1",
+              title: "legacy story",
+              workspace_id: "12345678",
+            },
+            assignee: { display_name: "开发者A" },
+            status: { local_phase: "initialized", last_synced_at: null },
+          },
+        },
+      },
+      null,
+      2,
+    )}\n`,
+  );
+
+  const current = run(cwd, "current", "--format", "json");
+  assert.equal(current.status, 0);
+  assert.equal(current.json.context.source, "legacy-context");
+  assert.equal(current.json.migration.from, ".tapd/context.json");
+  assert.equal(readFileSync(join(cwd, ".tapd", "context.json"), "utf8").includes("legacy-1"), true);
+
+  const again = run(cwd, "current", "--format", "json");
+  assert.equal(again.status, 0);
+  assert.equal(again.json.context.source, "git-dir-binding");
+});
+
+test("branch name resolver restores a low-confidence context without repo context file", () => {
+  const cwd = repo();
+  run(cwd, "init", "--base", "master", "--workspace", "12345678");
+  git(cwd, "switch", "-c", "feat/tapd-story-888999-login-timeout");
+
+  const current = run(cwd, "current", "--format", "json");
+  assert.equal(current.status, 0);
+  assert.equal(current.json.context.source, "branch-name");
+  assert.equal(current.json.context.confidence, 50);
+  assert.equal(current.json.context.work_item.entity_type, "Story");
+  assert.equal(current.json.context.work_item.id, "888999");
+  assert.equal(current.json.context.work_item.workspace_id, "12345678");
+  assert.equal(existsSync(join(cwd, ".tapd", "active-context.md")), true);
 });
 
 test("start reports project initialization and standard URL compatibility", () => {
@@ -304,4 +384,40 @@ test("invalid new and legacy config files keep distinct stable errors", () => {
   writeFileSync(join(legacyRepo, ".tapd", "project.json"), "{bad");
   const invalidLegacy = run(legacyRepo, "bind", "--input", input());
   assert.equal(invalidLegacy.json.error.code, "INVALID_PROJECT_FILE");
+});
+
+test("sync, doctor, hook and logout expose local lifecycle operations", () => {
+  const cwd = repo();
+  run(cwd, "init", "--base", "master", "--workspace", "12345678");
+  const started = run(cwd, "start", "--input", input());
+  assert.equal(started.status, 0);
+
+  const synced = run(cwd, "sync", "--current-branch");
+  assert.equal(synced.status, 0);
+  assert.equal(synced.json.action, "sync");
+  assert.equal(synced.json.active_context, ".tapd/active-context.md");
+
+  const silent = run(cwd, "sync", "--current-branch", "--silent");
+  assert.equal(silent.status, 0);
+  assert.equal(silent.stdout.trim(), "");
+
+  const doctor = run(cwd, "doctor");
+  assert.equal(doctor.status, 0);
+  assert.equal(doctor.json.action, "doctor");
+  assert.equal(doctor.json.current.ok, true);
+  assert.equal(doctor.json.active_context.stale, false);
+  assert.equal(doctor.json.hook.installed, false);
+
+  const installed = run(cwd, "hook", "install");
+  assert.equal(installed.status, 0);
+  assert.equal(installed.json.hook.installed, true);
+  const hookStatus = run(cwd, "hook", "status");
+  assert.equal(hookStatus.json.hook.managed_block, true);
+  const uninstalled = run(cwd, "hook", "uninstall");
+  assert.equal(uninstalled.status, 0);
+  assert.equal(uninstalled.json.hook.installed, false);
+
+  const logout = run(cwd, "logout");
+  assert.equal(logout.status, 0);
+  assert.equal(logout.json.action, "logout");
 });

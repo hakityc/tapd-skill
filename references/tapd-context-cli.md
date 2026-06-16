@@ -17,6 +17,11 @@ tapd-context bind --input '<context-json-or-standard-url>' [--force]
 tapd-context current --format json
 tapd-context current --format markdown
 tapd-context status
+tapd-context sync --current-branch
+tapd-context refresh
+tapd-context doctor
+tapd-context hook install|uninstall|status
+tapd-context logout
 ```
 
 `init` 必须接收已经由 skill 向用户确认的 base，不会静默采用候选值。workspace 可从输入 URL/JSON 取得；user nick 不是初始化必填项。
@@ -25,7 +30,10 @@ tapd-context status
 
 - `.tapd/config.json`：base、workspace、可选用户 nick 和分支模板。
 - `.tapd/project.json`：只读兼容旧版本配置；`configure` 可迁移为 config。
-- `.tapd/context.json`：`branches` 映射。
+- `$GIT_DIR/tapd-context/branches/<branch-hash>.json`：当前仓库本机分支绑定，只存 workspace、类型、ID、绑定方式和 Git commit。
+- `~/.tapd-context/cache/tapd/<workspace>/<type>/<id>.json`：个人本机工作项快照；不是 TAPD 事实源。
+- `.tapd/active-context.md`：Agent 可读渲染产物，必须 gitignored。
+- `.tapd/context.json`：只读兼容旧版 `branches` 映射；成功读取当前分支后迁移到 `$GIT_DIR/tapd-context`，新版本不默认写入。
 
 第一版 context 使用：
 
@@ -40,6 +48,14 @@ tapd-context status
 ```
 
 `binding.method` 可为 `start` 或 `bind`。不保存 `progress`，不自动维护研发阶段或 TAPD 状态。
+
+默认分支模板：
+
+```text
+{type}/tapd-{entity}-{id}-{slug}
+```
+
+默认类型映射：Story=`feat`、Task=`task`、Bug=`fix`。分支名解析支持 `tapd-story-<id>`、`tapd-task-<id>`、`tapd-bug-<id>`；`tapd-<id>` 作为低置信度兼容简写。
 
 ## Input
 
@@ -59,6 +75,7 @@ URL 支持标准 detail、Story/Task prong view 和 Bug bugtrace view 路径。J
 .tapd/project.json
 .tapd/config.json
 .tapd/context.json
+.tapd/active-context.md
 .tapd/logs/**
 ```
 
@@ -107,3 +124,7 @@ URL 支持标准 detail、Story/Task prong view 和 Bug bugtrace view 路径。J
 `current --format json` 返回工作项必要字段、assignee、binding、git 和 status；不返回 raw、完整 description、token 或 logs。
 
 markdown/status 只显示分支、类型、ID、标题、URL、workspace、负责人、绑定方式、local phase 和 base。
+
+`current` 输出包含 `source` 和 `confidence`。`source=branch-name` 且低置信度时可继续本地开发，但远端 TAPD 写入必须先用 MCP 强校验。
+
+`active-context.md` 顶部包含 branch guard 元数据；读取前必须确认当前 Git branch 与 metadata.branch 一致。

@@ -1,28 +1,32 @@
 #!/usr/bin/env node
-import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { buildBranchName } from "./branch-name.js";
-import { currentJson, currentMarkdown, publicContext } from "./format.js";
-import { assertBaseBranch, assertCleanWorktree, branchExists, createAndSwitchBranch, detectBaseCandidates, getCurrentBranch, getHeadCommit, getRepoRoot, switchBranch, tryRestoreBranch, } from "./git.js";
+import { candidatePublicContext, currentCandidateJson, currentCandidateMarkdown, renderActiveContext, } from "./format.js";
+import { assertBaseBranch, assertCleanWorktree, branchExists, createAndSwitchBranch, detectBaseCandidates, getCurrentBranch, getGitCommonDir, getGitDir, getGitPath, getHeadCommit, getRepoRoot, isPathIgnored, switchBranch, tryRestoreBranch, } from "./git.js";
+import { candidateFromExplicitInput, persistCandidate, resolveCurrent } from "./resolver.js";
 import { CliError, defaultProjectConfig, } from "./schema.js";
-import { CONFIG_FILE, CONTEXT_FILE, LEGACY_PROJECT_FILE, readContextStore, readProject, writeContextStore, writeProject, } from "./store.js";
+import { ACTIVE_CONTEXT_FILE, CONFIG_FILE, getCredentialsStatus, LEGACY_PROJECT_FILE, readContextStore, readGitBranchBinding, readProject, logoutCredentials, writeActiveContext, writeProject, } from "./store.js";
 import { parseInput } from "./tapd-url.js";
 const GITIGNORE_SUGGESTION = [
     ".tapd/config.json",
     ".tapd/project.json",
     ".tapd/context.json",
+    ".tapd/active-context.md",
     ".tapd/logs/",
 ];
 function parseArgs(argv) {
     const [command = "", ...rest] = argv;
     const options = {};
+    const positionals = [];
     for (let index = 0; index < rest.length; index += 1) {
         const token = rest[index];
         if (!token.startsWith("--")) {
-            throw new CliError("INVALID_ARGUMENT", `无法识别参数：${token}`);
+            positionals.push(token);
+            continue;
         }
         const key = token.slice(2);
-        if (key === "force") {
+        if (["force", "current-branch", "silent", "on-checkout"].includes(key)) {
             options[key] = true;
             continue;
         }
@@ -33,7 +37,7 @@ function parseArgs(argv) {
         options[key] = value;
         index += 1;
     }
-    return { command, options };
+    return { command, positionals, options };
 }
 function optionString(options, key) {
     const value = options[key];
@@ -50,6 +54,11 @@ function usage() {
         "tapd-context bind --input <context-json-or-url> [--force]",
         "tapd-context current [--format json|markdown]",
         "tapd-context status",
+        "tapd-context sync --current-branch [--silent]",
+        "tapd-context refresh",
+        "tapd-context doctor",
+        "tapd-context hook install|uninstall|status",
+        "tapd-context logout",
         "tapd-context detect-base",
     ].join("\n");
 }
@@ -64,28 +73,6 @@ function uniqueBranchName(repoRoot, desired) {
         }
     }
     throw new CliError("BRANCH_CREATE_FAILED", "无法生成可用的新分支名。");
-}
-function makeContext(method, branch, baseBranch, sourceBranch, commit, item, displayName) {
-    const now = new Date().toISOString();
-    return {
-        branch,
-        created_at: now,
-        updated_at: now,
-        binding: { method },
-        git: {
-            base_branch: baseBranch,
-            source_branch: sourceBranch,
-            created_from_commit: commit,
-        },
-        work_item: item,
-        assignee: {
-            display_name: item.user_nick || displayName,
-        },
-        status: {
-            local_phase: "initialized",
-            last_synced_at: null,
-        },
-    };
 }
 function init(repoRoot, args) {
     const user = optionString(args.options, "user");
@@ -163,6 +150,13 @@ function applyProjectWorkspace(project, item) {
         item.workspace_id = project.workspace_id;
     }
 }
+function explicitSource(input) {
+    return /^https?:\/\//i.test(input.trim()) ? "explicit-url" : "explicit-json";
+}
+function persistAndRenderCurrent(repoRoot, candidate, method) {
+    persistCandidate(repoRoot, candidate, method);
+    writeActiveContext(repoRoot, renderActiveContext(candidate));
+}
 function start(repoRoot, args) {
     const originalBranch = getCurrentBranch(repoRoot);
     const input = optionString(args.options, "input");
@@ -212,36 +206,9 @@ function start(repoRoot, args) {
             restored: true,
         });
     }
-    let store;
+    const candidate = candidateFromExplicitInput(newBranch, item, explicitSource(input), "start", project.base_branch, project.base_branch, createdFromCommit);
     try {
-        store = readContextStore(repoRoot);
-    }
-    catch (error) {
-        const restore = tryRestoreBranch(repoRoot, originalBranch);
-        if (!restore.restored) {
-            throw new CliError("RESTORE_FAILED", "读取上下文失败，且无法自动恢复原分支。", {
-                original_branch: originalBranch,
-                created_branch: newBranch,
-                original_error: error instanceof Error ? error.message : String(error),
-                restore_error: restore.error,
-                manual_recovery: [`git switch ${originalBranch}`, "git status"],
-            });
-        }
-        throw error;
-    }
-    if (store.branches[newBranch]) {
-        const restore = tryRestoreBranch(repoRoot, originalBranch);
-        throw new CliError(restore.restored ? "CONTEXT_ALREADY_BOUND" : "RESTORE_FAILED", "新分支已有上下文绑定。", {
-            branch: newBranch,
-            original_branch: originalBranch,
-            restored: restore.restored,
-            restore_error: restore.error,
-        });
-    }
-    const context = makeContext("start", newBranch, project.base_branch, project.base_branch, createdFromCommit, item, project.user_nick || "");
-    store.branches[newBranch] = context;
-    try {
-        writeContextStore(repoRoot, store);
+        persistAndRenderCurrent(repoRoot, candidate, "start");
     }
     catch (error) {
         const restore = tryRestoreBranch(repoRoot, originalBranch);
@@ -269,11 +236,16 @@ function start(repoRoot, args) {
         ok: true,
         action: "start",
         branch: newBranch,
-        context: publicContext(context),
+        context: candidatePublicContext(candidate),
         based_on: {
             branch: project.base_branch,
             commit: createdFromCommit,
             note: "新分支基于本地 base_branch 当前 HEAD 创建；如需远端最新内容，请先手动更新 base 分支。",
+        },
+        storage: {
+            binding: "$GIT_DIR/tapd-context",
+            cache: "~/.tapd-context/cache",
+            active_context: ACTIVE_CONTEXT_FILE,
         },
         gitignore_suggestion: GITIGNORE_SUGGESTION,
     });
@@ -287,57 +259,223 @@ function bind(repoRoot, args) {
     }
     const item = parseInput(input);
     applyProjectWorkspace(project, item);
-    const store = readContextStore(repoRoot);
-    if (store.branches[branch] && args.options.force !== true) {
+    const existing = readGitBranchBinding(repoRoot, branch);
+    const legacy = existing ? undefined : readContextStore(repoRoot).branches[branch];
+    if ((existing || legacy) && args.options.force !== true) {
         throw new CliError("CONTEXT_ALREADY_BOUND", "当前分支已有上下文绑定；如确认覆盖请传 --force。", {
             branch,
             existing_work_item: {
-                entity_type: store.branches[branch].work_item.entity_type,
-                id: store.branches[branch].work_item.id,
-                title: store.branches[branch].work_item.title,
+                entity_type: existing?.entity_type || legacy?.work_item.entity_type,
+                id: existing?.id || legacy?.work_item.id,
+                title: legacy?.work_item.title,
             },
+            source: existing ? "$GIT_DIR/tapd-context" : ".tapd/context.json",
         });
     }
-    const context = makeContext("bind", branch, project.base_branch, branch, getHeadCommit(repoRoot), item, project.user_nick || "");
-    store.branches[branch] = context;
-    writeContextStore(repoRoot, store);
+    const candidate = candidateFromExplicitInput(branch, item, explicitSource(input), "bind", project.base_branch, branch, getHeadCommit(repoRoot));
+    persistAndRenderCurrent(repoRoot, candidate, "bind");
     printJson({
         ok: true,
         action: "bind",
         branch,
-        context: publicContext(context),
+        context: candidatePublicContext(candidate),
+        storage: {
+            binding: "$GIT_DIR/tapd-context",
+            cache: "~/.tapd-context/cache",
+            active_context: ACTIVE_CONTEXT_FILE,
+        },
         gitignore_suggestion: GITIGNORE_SUGGESTION,
     });
 }
 function current(repoRoot, args) {
-    const branch = getCurrentBranch(repoRoot);
-    const contextPath = join(repoRoot, CONTEXT_FILE);
-    if (!existsSync(contextPath)) {
-        throw new CliError("CONTEXT_NOT_FOUND", "当前项目尚无 .tapd/context.json。", {
-            branch,
-        });
-    }
-    const store = readContextStore(repoRoot);
-    const context = store.branches[branch];
-    if (!context) {
-        throw new CliError("CONTEXT_NOT_FOUND", "当前分支没有 TAPD 上下文绑定。", {
-            branch,
-        });
-    }
+    const resolved = resolveCurrent(repoRoot);
+    writeActiveContext(repoRoot, renderActiveContext(resolved.candidate));
     const format = optionString(args.options, "format") || "json";
     if (format === "markdown") {
-        process.stdout.write(`${currentMarkdown(branch, context)}\n`);
+        process.stdout.write(`${currentCandidateMarkdown(resolved.candidate)}\n`);
         return;
     }
     if (format !== "json") {
         throw new CliError("INVALID_ARGUMENT", "--format 仅支持 json 或 markdown。");
     }
-    printJson(currentJson(branch, context));
+    printJson(currentCandidateJson(resolved.branch, resolved.candidate, resolved.migrated_legacy));
+}
+function sync(repoRoot, args) {
+    if (args.options["current-branch"] !== true && args.command === "sync") {
+        throw new CliError("INVALID_ARGUMENT", "sync 第一版仅支持 --current-branch。");
+    }
+    const resolved = resolveCurrent(repoRoot);
+    writeActiveContext(repoRoot, renderActiveContext(resolved.candidate));
+    if (args.options.silent === true) {
+        return;
+    }
+    printJson({
+        ...currentCandidateJson(resolved.branch, resolved.candidate, resolved.migrated_legacy),
+        action: args.command === "refresh" ? "refresh" : "sync",
+        active_context: ACTIVE_CONTEXT_FILE,
+        offline_fallback: resolved.candidate.confidence < 90,
+    });
+}
+function doctor(repoRoot) {
+    const credentials = getCredentialsStatus();
+    let currentResult;
+    try {
+        const resolved = resolveCurrent(repoRoot);
+        currentResult = {
+            ok: true,
+            branch: resolved.branch,
+            source: resolved.candidate.source,
+            confidence: resolved.candidate.confidence,
+            context_id: resolved.candidate.contextId,
+        };
+    }
+    catch (error) {
+        const cliError = error instanceof CliError
+            ? error
+            : new CliError("UNEXPECTED_ERROR", String(error));
+        currentResult = {
+            ok: false,
+            error: {
+                code: cliError.code,
+                message: cliError.message,
+            },
+        };
+    }
+    printJson({
+        ok: true,
+        action: "doctor",
+        git: {
+            repo_root: repoRoot,
+            git_dir: getGitDir(repoRoot),
+            git_common_dir: getGitCommonDir(repoRoot),
+        },
+        project_config: {
+            path: CONFIG_FILE,
+            exists: existsSync(join(repoRoot, CONFIG_FILE)),
+        },
+        active_context: {
+            ...activeContextStatus(repoRoot),
+            recommendation: "请确保 .tapd/active-context.md 已加入 .gitignore。",
+        },
+        credentials,
+        hook: hookStatus(repoRoot),
+        current: currentResult,
+    });
+}
+function activeContextStatus(repoRoot) {
+    const path = join(repoRoot, ACTIVE_CONTEXT_FILE);
+    const exists = existsSync(path);
+    const status = {
+        path: ACTIVE_CONTEXT_FILE,
+        exists,
+        gitignored: isPathIgnored(repoRoot, ACTIVE_CONTEXT_FILE),
+    };
+    if (!exists) {
+        return status;
+    }
+    const content = readFileSync(path, "utf8");
+    const branch = content.match(/^branch:\s*(.+)$/m)?.[1]?.trim();
+    if (branch) {
+        status.metadata_branch = branch;
+        try {
+            const currentBranch = getCurrentBranch(repoRoot);
+            status.current_branch = currentBranch;
+            status.stale = currentBranch !== branch;
+        }
+        catch {
+            status.stale = true;
+        }
+    }
+    return status;
+}
+const HOOK_BEGIN = "# tapd-context managed block begin";
+const HOOK_END = "# tapd-context managed block end";
+const HOOK_BLOCK = `${HOOK_BEGIN}
+tapd-context sync --silent --current-branch --on-checkout || true
+${HOOK_END}`;
+function hookPath(repoRoot) {
+    return getGitPath(repoRoot, "hooks/post-checkout");
+}
+function hookStatus(repoRoot) {
+    const path = hookPath(repoRoot);
+    if (!existsSync(path)) {
+        return {
+            path,
+            installed: false,
+            managed_block: false,
+        };
+    }
+    const content = readFileSync(path, "utf8");
+    return {
+        path,
+        installed: content.includes(HOOK_BEGIN) && content.includes(HOOK_END),
+        managed_block: content.includes(HOOK_BEGIN) && content.includes(HOOK_END),
+    };
+}
+function installHook(repoRoot) {
+    const path = hookPath(repoRoot);
+    mkdirSync(dirname(path), { recursive: true });
+    const existing = existsSync(path) ? readFileSync(path, "utf8") : "";
+    if (existing.includes(HOOK_BEGIN)) {
+        printJson({ ok: true, action: "hook install", hook: hookStatus(repoRoot) });
+        return;
+    }
+    const prefix = existing.trim()
+        ? existing.trimEnd()
+        : "#!/bin/sh";
+    writeFileSync(path, `${prefix}\n\n${HOOK_BLOCK}\n`, { mode: 0o755 });
+    printJson({
+        ok: true,
+        action: "hook install",
+        hook: hookStatus(repoRoot),
+        note: "hook 失败不会阻塞 git checkout；如已有复杂 hook，请人工确认 managed block 位置。",
+    });
+}
+function uninstallHook(repoRoot) {
+    const path = hookPath(repoRoot);
+    if (!existsSync(path)) {
+        printJson({ ok: true, action: "hook uninstall", hook: hookStatus(repoRoot) });
+        return;
+    }
+    const content = readFileSync(path, "utf8");
+    const pattern = new RegExp(`\\n?${HOOK_BEGIN}[\\s\\S]*?${HOOK_END}\\n?`, "m");
+    writeFileSync(path, content.replace(pattern, "\n").trimEnd() + "\n", {
+        mode: 0o755,
+    });
+    printJson({ ok: true, action: "hook uninstall", hook: hookStatus(repoRoot) });
+}
+function hook(repoRoot, args) {
+    const subcommand = args.positionals[0] || "status";
+    if (subcommand === "install") {
+        installHook(repoRoot);
+        return;
+    }
+    if (subcommand === "uninstall") {
+        uninstallHook(repoRoot);
+        return;
+    }
+    if (subcommand === "status") {
+        printJson({ ok: true, action: "hook status", hook: hookStatus(repoRoot) });
+        return;
+    }
+    throw new CliError("INVALID_ARGUMENT", "hook 仅支持 install、uninstall 或 status。");
+}
+function logout() {
+    const removed = logoutCredentials();
+    printJson({
+        ok: true,
+        action: "logout",
+        removed_credentials: removed,
+    });
 }
 function main() {
     const args = parseArgs(process.argv.slice(2));
     if (args.command === "--help" || args.command === "-h" || !args.command) {
         process.stdout.write(`${usage()}\n`);
+        return;
+    }
+    if (args.command === "logout") {
+        logout();
         return;
     }
     const repoRoot = getRepoRoot(process.cwd());
@@ -363,8 +501,21 @@ function main() {
         case "status":
             current(repoRoot, {
                 command: "current",
+                positionals: [],
                 options: { format: "markdown" },
             });
+            break;
+        case "sync":
+            sync(repoRoot, args);
+            break;
+        case "refresh":
+            sync(repoRoot, { ...args, options: { ...args.options, "current-branch": true } });
+            break;
+        case "doctor":
+            doctor(repoRoot);
+            break;
+        case "hook":
+            hook(repoRoot, args);
             break;
         default:
             throw new CliError("UNKNOWN_COMMAND", `未知命令：${args.command}`);

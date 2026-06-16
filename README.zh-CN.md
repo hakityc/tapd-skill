@@ -16,7 +16,7 @@
 
 - 粘贴 Story/Task/Bug 链接后读取需求、任务、缺陷和原型信息。
 - 首次使用时在业务仓库生成本地 `.tapd/config.json`，并创建开发分支。
-- 后续会话从当前分支恢复 TAPD 上下文，继续计划、编码、测试或收尾。
+- 后续会话从 Git dir 本机绑定或 `tapd-*` 分支名恢复 TAPD 上下文，继续计划、编码、测试或收尾。
 - Task 会回溯父 Story，Bug 会整理复现、影响、关联需求和回归范围。
 - 创建/更新任务、测试用例、评论、工时前先 dry-run，并按 MCP 能力回读。
 - 生成简短日报/站会简报：今日完成、进行中、风险、明日计划、数据统计。
@@ -75,7 +75,7 @@ npx skills update tapd --global --yes
 1. 探测 Git base 分支候选。
 2. 让用户确认 base。
 3. 生成 `.tapd/config.json`。
-4. 创建开发分支并绑定当前工作项。
+4. 创建 `tapd-story|task|bug-<id>` 开发分支并绑定当前工作项。
 
 生成的本地配置类似：
 
@@ -109,12 +109,14 @@ npx skills update tapd --global --yes
 
 ## 本地文件
 
-Skill 只会在业务仓库写本地状态：
+Skill 按敏感程度拆分本地状态：
 
 ```text
-.tapd/config.json
-.tapd/context.json
-.tapd/logs/
+.tapd/config.json                  项目配置
+$GIT_DIR/tapd-context/             本机分支绑定
+~/.tapd-context/cache/             个人工作项缓存
+.tapd/active-context.md            生成给 Agent 读取的上下文
+.tapd/context.json                 旧版只读迁移路径
 ```
 
 建议手工加入项目 `.gitignore`：
@@ -123,10 +125,13 @@ Skill 只会在业务仓库写本地状态：
 .tapd/config.json
 .tapd/project.json
 .tapd/context.json
+.tapd/active-context.md
 .tapd/logs/
 ```
 
 CLI 不会自动修改 `.gitignore`。
+
+为了让同事接手时更无痛，建议保留默认分支命名协议，例如 `feat/tapd-story-1112345678000000001-action-item`。同事 checkout 后执行 `/tapd 继续开发`，skill 可以先从分支名恢复 TAPD 身份，再通过 MCP 补全详情。
 
 ## 安全边界
 
@@ -135,7 +140,7 @@ CLI 不会自动修改 `.gitignore`。
 - TAPD 远端读写只通过 MCP，不直接调用 OpenAPI。
 - 远端写入默认 dry-run + 用户确认。
 - owner 使用精确匹配，避免相似昵称误写。
-- dirty worktree 检查只排除 `.tapd/config.json`、`.tapd/project.json`、`.tapd/context.json` 和 `.tapd/logs/**`。
+- dirty worktree 检查只排除 `.tapd/config.json`、`.tapd/project.json`、`.tapd/context.json`、`.tapd/active-context.md` 和 `.tapd/logs/**`。
 
 ## 运行要求
 

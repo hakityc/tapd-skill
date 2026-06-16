@@ -5,7 +5,7 @@
 ## 必做检查
 
 1. 用当前分支 context 确认工作项。
-2. 查看 `git status` 和 `git diff`，确保没有误改用户文件或把 `.tapd` 本地状态纳入提交。
+2. 查看 `git status` 和 `git diff`，确保没有误改用户文件或把 `.tapd` 本地生成物纳入提交。
 3. 运行与改动相关的测试、lint、类型检查或构建。
 4. 对照 Story must、焦点 Task、原型和计划给出通过/未通过/未验证清单。
 5. 输出完成摘要、风险和待联调项。
@@ -14,7 +14,7 @@
 
 - 运行时存在 `get_commit_msg` 时，可读取 TAPD 源码提交关键字。
 - 默认只生成建议提交信息，不自动 commit。
-- 用户明确要求提交时，遵循仓库提交规范，并确保不提交 `.tapd/config.json`、`.tapd/context.json` 或 logs。
+- 用户明确要求提交时，遵循仓库提交规范，并确保不提交 `.tapd/config.json`、`.tapd/context.json`、`.tapd/active-context.md` 或 logs。
 
 ## 工时登记
 

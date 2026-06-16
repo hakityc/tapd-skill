@@ -17,6 +17,9 @@ tapd-context configure --user "开发者A"
 tapd-context start --input '{"entity_type":"Story","id":"...","title":"..."}'
 tapd-context bind --input '{"entity_type":"Task","id":"..."}'
 tapd-context current --format json
+tapd-context sync --current-branch
+tapd-context doctor
+tapd-context hook status
 tapd-context status
 ```
 
@@ -26,11 +29,13 @@ CLI 保持缺失，不生成虚假值。
 
 ## Local files
 
-CLI 新版本只写：
+CLI 新版本默认写：
 
-- `.tapd/config.json`
-- `.tapd/context.json`
+- `.tapd/config.json`：项目低敏配置。
+- `$GIT_DIR/tapd-context/`：本机分支绑定，不进入业务仓库。
+- `~/.tapd-context/cache/`：个人本机工作项快照。
+- `.tapd/active-context.md`：Agent 可读渲染产物，必须 gitignored。
 
-`.tapd/project.json` 仅用于读取旧版本配置；新写入统一使用 `.tapd/config.json`。
-日志目录 `.tapd/logs/` 预留给调用方。CLI 会提示将这些路径加入
-`.gitignore`，但不会自行修改项目文件。
+`.tapd/project.json` 仅用于读取旧版本配置；`.tapd/context.json` 仅用于旧版本只读迁移。日志目录 `.tapd/logs/` 预留给调用方。CLI 会提示将本地生成路径加入 `.gitignore`，但不会自行修改项目文件。
+
+默认分支模板为 `{type}/tapd-{entity}-{id}-{slug}`。同事 checkout 规范分支后，`current` / `sync --current-branch` 可从分支名恢复低置信度上下文，再由 skill 通过 MCP 补全。

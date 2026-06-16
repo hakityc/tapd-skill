@@ -2,13 +2,15 @@
 
 ## 本地 Git 与 context
 
-- 明确的“开始”允许创建业务分支并写 `.tapd/context.json`。
-- 明确的“绑定”允许写当前分支 context。
+- 明确的“开始”允许创建业务分支、写 `$GIT_DIR/tapd-context` 本机绑定、写 `~/.tapd-context/cache` 和生成 `.tapd/active-context.md`。
+- 明确的“绑定”允许写当前分支本机绑定和 active context。
 - 首次 init 的 base 候选必须展示并确认。
 - 已有配置、已有绑定或新旧工作项冲突时默认不覆盖。
 - 不执行 pull、stash、强制 checkout、自动删分支、自动提交或修改 `.gitignore`。
-- dirty 检查仅豁免 `.tapd/config.json`、兼容旧版的 `.tapd/project.json`、`.tapd/context.json`、`.tapd/logs/**`。
+- dirty 检查仅豁免 `.tapd/config.json`、兼容旧版的 `.tapd/project.json`、`.tapd/context.json`、`.tapd/active-context.md`、`.tapd/logs/**`。
 - JSON 使用原子写入；损坏文件停止处理，不用空文件覆盖。
+- `.tapd/context.json` 只读兼容旧版本；新版本不默认写入。
+- 低置信度分支名恢复可用于本地开发；TAPD 远端写入前必须通过 MCP 重新确认目标对象。
 
 ## TAPD 远端写入
 
@@ -21,7 +23,7 @@
 5. 缺少回读能力时必须说明“写入返回成功，但无法列表回读”。
 6. 回读与写入结果不一致时标记“写入未确认”。
 
-本地 context 写入不套用 TAPD 远端 dry-run，但仍遵守 base、冲突和覆盖确认。
+本地 context 写入不套用 TAPD 远端 dry-run，但仍遵守 base、冲突和覆盖确认。`active-context.md` 是 Agent 阅读产物，不是事实源；分支不匹配时不得使用。
 
 ## Owner 精确匹配
 

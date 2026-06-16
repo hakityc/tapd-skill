@@ -1,8 +1,9 @@
 import { execFileSync } from "node:child_process";
+import { isAbsolute, resolve } from "node:path";
 
 import { CliError } from "./schema.js";
 
-function runGit(args: string[], cwd: string): string {
+export function runGit(args: string[], cwd: string): string {
   try {
     return execFileSync("git", args, {
       cwd,
@@ -27,6 +28,37 @@ function runGit(args: string[], cwd: string): string {
 export function getRepoRoot(cwd: string): string {
   try {
     return runGit(["rev-parse", "--show-toplevel"], cwd);
+  } catch {
+    throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
+  }
+}
+
+function absoluteGitPath(repoRoot: string, value: string): string {
+  return isAbsolute(value) ? value : resolve(repoRoot, value);
+}
+
+export function getGitDir(repoRoot: string): string {
+  try {
+    return absoluteGitPath(repoRoot, runGit(["rev-parse", "--git-dir"], repoRoot));
+  } catch {
+    throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
+  }
+}
+
+export function getGitCommonDir(repoRoot: string): string {
+  try {
+    return absoluteGitPath(
+      repoRoot,
+      runGit(["rev-parse", "--git-common-dir"], repoRoot),
+    );
+  } catch {
+    throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
+  }
+}
+
+export function getGitPath(repoRoot: string, path: string): string {
+  try {
+    return absoluteGitPath(repoRoot, runGit(["rev-parse", "--git-path", path], repoRoot));
   } catch {
     throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
   }
@@ -77,6 +109,7 @@ export function getDirtyEntries(repoRoot: string): string[] {
       ":(exclude).tapd/config.json",
       ":(exclude).tapd/project.json",
       ":(exclude).tapd/context.json",
+      ":(exclude).tapd/active-context.md",
       ":(exclude).tapd/logs/**",
     ],
     repoRoot,
@@ -139,4 +172,13 @@ export function detectBaseCandidates(repoRoot: string): string[] {
     }
   }
   return candidates;
+}
+
+export function isPathIgnored(repoRoot: string, path: string): boolean {
+  try {
+    runGit(["check-ignore", "--quiet", path], repoRoot);
+    return true;
+  } catch {
+    return false;
+  }
 }

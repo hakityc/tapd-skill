@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.local/tapd-context/context.schema.json",
-  "title": "TAPD Branch Context Store",
+  "title": "Legacy TAPD Branch Context Store",
   "type": "object",
   "required": [
     "version",

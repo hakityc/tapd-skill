@@ -53,6 +53,85 @@ export interface ContextStore {
   branches: Record<string, BranchContext>;
 }
 
+export type ContextSource =
+  | "explicit-url"
+  | "explicit-json"
+  | "git-dir-binding"
+  | "branch-name"
+  | "local-cache"
+  | "legacy-context"
+  | "manual";
+
+export interface GitBranchBinding {
+  version: 1;
+  branch: string;
+  branch_hash: string;
+  context_id: string;
+  provider: "tapd";
+  workspace_id?: string;
+  entity_type: EntityType;
+  id: string;
+  short_id?: string;
+  source: ContextSource;
+  binding: {
+    method: "start" | "bind";
+  };
+  git: {
+    base_branch: string;
+    source_branch: string;
+    created_from_commit: string;
+  };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CachedWorkItem {
+  version: 1;
+  provider: "tapd";
+  workspace_id?: string;
+  entity_type: EntityType;
+  id: string;
+  short_id?: string;
+  title?: string;
+  url?: string;
+  user_nick?: string;
+  status?: string;
+  summary?: string;
+  acceptance_criteria?: string[];
+  last_mcp_sync_at: string | null;
+  source: string;
+  schema_version: 1;
+}
+
+export interface ContextCandidate {
+  provider: "tapd";
+  workspaceId?: string;
+  entityType: EntityType;
+  id: string;
+  shortId?: string;
+  contextId: string;
+  source: ContextSource;
+  confidence: number;
+  reason: string;
+  branch: string;
+  workItem: WorkItemInput;
+  binding?: {
+    method: "start" | "bind";
+  };
+  git?: {
+    base_branch: string;
+    source_branch: string;
+    created_from_commit: string;
+  };
+  status?: {
+    local_phase: "initialized";
+    last_synced_at: null | string;
+  };
+  created_at?: string;
+  updated_at?: string;
+  warnings?: string[];
+}
+
 export class CliError extends Error {
   readonly code: string;
   readonly details?: Record<string, unknown>;
@@ -134,10 +213,10 @@ export function defaultProjectConfig(
     branch: {
       type_map: {
         Story: "feat",
-        Task: "feat",
-        Bug: "hotfix",
+        Task: "task",
+        Bug: "fix",
       },
-      name_template: "{type}/{date}/{slug}",
+      name_template: "{type}/tapd-{entity}-{id}-{slug}",
       date_format: "YYMMDD",
       slug_language: "en",
     },

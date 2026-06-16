@@ -67,10 +67,10 @@ export function defaultProjectConfig(baseBranch, workspaceId, userNick) {
         branch: {
             type_map: {
                 Story: "feat",
-                Task: "feat",
-                Bug: "hotfix",
+                Task: "task",
+                Bug: "fix",
             },
-            name_template: "{type}/{date}/{slug}",
+            name_template: "{type}/tapd-{entity}-{id}-{slug}",
             date_format: "YYMMDD",
             slug_language: "en",
         },

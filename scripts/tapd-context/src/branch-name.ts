@@ -1,4 +1,4 @@
-import { ProjectConfig, WorkItemInput } from "./schema.js";
+import { EntityType, ProjectConfig, WorkItemInput } from "./schema.js";
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -37,8 +37,53 @@ export function buildBranchName(
   const normalizedOverride = slugOverride ? slugifyTitle(slugOverride) : "";
   const slug = normalizedOverride || slugifyTitle(item.title || "") || fallbackSlug(item);
   const type = config.branch.type_map[item.entity_type];
+  const identity = item.id;
   return config.branch.name_template
     .replaceAll("{type}", type)
     .replaceAll("{date}", formatDate(date))
+    .replaceAll("{entity}", item.entity_type.toLowerCase())
+    .replaceAll("{id}", identity)
     .replaceAll("{slug}", slug);
+}
+
+export interface ParsedBranchIdentity {
+  entity_type?: EntityType;
+  id: string;
+  shorthand: boolean;
+}
+
+const TYPED_TAPD_BRANCH =
+  /(?:^|\/)tapd-(story|task|bug)-([0-9A-Za-z_]+)(?=$|[-/])/i;
+const SHORT_TAPD_BRANCH = /(?:^|\/)tapd-([0-9A-Za-z_]+)(?=$|[-/])/i;
+
+function entityFromBranchToken(value: string): EntityType {
+  const normalized = value.toLowerCase();
+  if (normalized === "story") {
+    return "Story";
+  }
+  if (normalized === "task") {
+    return "Task";
+  }
+  return "Bug";
+}
+
+export function parseTapdBranchName(branch: string): ParsedBranchIdentity | null {
+  const typed = branch.match(TYPED_TAPD_BRANCH);
+  if (typed) {
+    return {
+      entity_type: entityFromBranchToken(typed[1]),
+      id: typed[2],
+      shorthand: false,
+    };
+  }
+
+  const shorthand = branch.match(SHORT_TAPD_BRANCH);
+  if (shorthand) {
+    return {
+      id: shorthand[1],
+      shorthand: true,
+    };
+  }
+
+  return null;
 }

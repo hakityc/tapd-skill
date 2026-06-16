@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
+import { isAbsolute, resolve } from "node:path";
 import { CliError } from "./schema.js";
-function runGit(args, cwd) {
+export function runGit(args, cwd) {
     try {
         return execFileSync("git", args, {
             cwd,
@@ -21,6 +22,33 @@ function runGit(args, cwd) {
 export function getRepoRoot(cwd) {
     try {
         return runGit(["rev-parse", "--show-toplevel"], cwd);
+    }
+    catch {
+        throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
+    }
+}
+function absoluteGitPath(repoRoot, value) {
+    return isAbsolute(value) ? value : resolve(repoRoot, value);
+}
+export function getGitDir(repoRoot) {
+    try {
+        return absoluteGitPath(repoRoot, runGit(["rev-parse", "--git-dir"], repoRoot));
+    }
+    catch {
+        throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
+    }
+}
+export function getGitCommonDir(repoRoot) {
+    try {
+        return absoluteGitPath(repoRoot, runGit(["rev-parse", "--git-common-dir"], repoRoot));
+    }
+    catch {
+        throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
+    }
+}
+export function getGitPath(repoRoot, path) {
+    try {
+        return absoluteGitPath(repoRoot, runGit(["rev-parse", "--git-path", path], repoRoot));
     }
     catch {
         throw new CliError("NOT_GIT_REPO", "当前目录不在 Git 仓库中。");
@@ -68,6 +96,7 @@ export function getDirtyEntries(repoRoot) {
         ":(exclude).tapd/config.json",
         ":(exclude).tapd/project.json",
         ":(exclude).tapd/context.json",
+        ":(exclude).tapd/active-context.md",
         ":(exclude).tapd/logs/**",
     ], repoRoot);
     return output ? output.split("\n").filter(Boolean) : [];
@@ -113,4 +142,13 @@ export function detectBaseCandidates(repoRoot) {
         }
     }
     return candidates;
+}
+export function isPathIgnored(repoRoot, path) {
+    try {
+        runGit(["check-ignore", "--quiet", path], repoRoot);
+        return true;
+    }
+    catch {
+        return false;
+    }
 }

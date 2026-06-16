@@ -21,7 +21,7 @@
 
 1. **本轮 Context JSON**：识别包含 `entity_type` 和 `id` 的 JSON 对象。
 2. **本轮 TAPD URL**：支持标准 detail 链接及 `/<workspace>/prong/stories|tasks/view/<id>`。
-3. **当前分支 context**：调用 `current --format json`；仅在本轮没有任何明确新工作项输入时使用。
+3. **当前分支 context**：调用 `current --format json`；仅在本轮没有任何明确新工作项输入时使用。CLI 内部顺序为 `$GIT_DIR/tapd-context`、分支名 `tapd-story|task|bug-<id>`、本机 cache、legacy `.tapd/context.json`。
 4. **旧格式文本**：解析 `类型`、`标题`、`工作项 id`、`链接`、`当前用户`，转换为 Context JSON。检测到这些字段即视为本轮新工作项输入，不得被步骤 3 的旧 context 覆盖。
 5. 仍无工作项时询问用户提供 Context JSON 或标准 TAPD URL。
 
@@ -46,7 +46,7 @@ Story/Task 只有 URL 且缺标题时用 `get_stories_or_tasks` 补全，Bug 使
    - 重试 `start`。
 5. start 成功后再进入 MCP 能力门禁和 intake。
 
-“开始新需求”明确授权创建本地分支和 context 文件，但 base 候选、绑定冲突与覆盖仍需确认。
+“开始新需求”明确授权创建本地分支、写 `$GIT_DIR/tapd-context`、写 `~/.tapd-context/cache` 并生成 `.tapd/active-context.md`，但 base 候选、绑定冲突与覆盖仍需确认。
 
 ## 绑定当前分支
 
@@ -62,6 +62,7 @@ Story/Task 只有 URL 且缺标题时用 `get_stories_or_tasks` 补全，Bug 使
 没有新工作项输入时执行 `current --format json`：
 
 - 成功：使用绑定工作项进入目标 workflow。
+- `source=branch-name` 且 `confidence < 90`：允许继续只读规划或本地开发；TAPD 远端写入前必须通过 MCP 强校验。
 - `CONTEXT_NOT_FOUND`：要求提供 Context JSON、URL 或执行绑定。
 - `DETACHED_HEAD`：要求先切换到命名分支。
 - `INVALID_CONTEXT_FILE`：停止并提示修复 JSON，不覆盖损坏文件。
@@ -77,7 +78,10 @@ Story/Task 只有 URL 且缺标题时用 `get_stories_or_tasks` 补全，Bug 使
 .tapd/config.json
 .tapd/project.json
 .tapd/context.json
+.tapd/active-context.md
 .tapd/logs/
 ```
 
-`.tapd/project.json` 是旧格式兼容路径。不得自动修改 `.gitignore`、pull、stash 或提交这些文件。
+`.tapd/project.json` 和 `.tapd/context.json` 是旧格式兼容路径；新版本不默认写 `.tapd/context.json`。不得自动修改 `.gitignore`、pull、stash 或提交这些文件。
+
+如果希望同事 checkout 分支后无需粘贴链接即可恢复，请使用默认 `tapd-story|task|bug-<id>` 分支命名协议。Remote registry 暂不作为当前版本主线。

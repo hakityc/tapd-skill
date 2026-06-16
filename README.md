@@ -16,7 +16,7 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 
 - Reads requirements, tasks, bugs, and prototype information after you paste a Story/Task/Bug link.
 - Generates local `.tapd/config.json` in a business repository on first use, then creates a development branch.
-- Restores TAPD context from the current branch in later sessions so you can continue planning, coding, testing, or wrapping up.
+- Restores TAPD context from local Git-dir binding or the `tapd-*` branch name in later sessions so you can continue planning, coding, testing, or wrapping up.
 - Resolves a Task back to its parent Story; summarizes Bug reproduction steps, impact, related requirements, and regression scope.
 - Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
 - Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
@@ -75,7 +75,7 @@ When you paste a TAPD link in a business repository for the first time, the skil
 1. Detect Git base branch candidates.
 2. Ask you to confirm the base branch.
 3. Generate `.tapd/config.json`.
-4. Create a development branch and bind the current work item.
+4. Create a `tapd-story|task|bug-<id>` development branch and bind the current work item.
 
 The generated local config looks like this:
 
@@ -109,12 +109,14 @@ Supported common link forms:
 
 ## Local Files
 
-The skill only writes local state in the business repository:
+The skill splits state by sensitivity:
 
 ```text
-.tapd/config.json
-.tapd/context.json
-.tapd/logs/
+.tapd/config.json                  project config
+$GIT_DIR/tapd-context/             local branch binding
+~/.tapd-context/cache/             personal work item cache
+.tapd/active-context.md            generated agent-readable context
+.tapd/context.json                 legacy read-only migration path
 ```
 
 Recommended project `.gitignore` entries:
@@ -123,10 +125,13 @@ Recommended project `.gitignore` entries:
 .tapd/config.json
 .tapd/project.json
 .tapd/context.json
+.tapd/active-context.md
 .tapd/logs/
 ```
 
 The CLI never edits `.gitignore` automatically.
+
+For painless handoff, keep the default branch naming protocol such as `feat/tapd-story-1112345678000000001-action-item`. A teammate can check out that branch and run `/tapd continue`; the skill can recover the TAPD identity from the branch name and then refresh details through MCP.
 
 ## Safety Boundaries
 
@@ -135,7 +140,7 @@ The CLI never edits `.gitignore` automatically.
 - Reads and writes TAPD remotely only through MCP; it does not call OpenAPI directly.
 - Uses dry-run plus user confirmation before remote writes.
 - Matches owners exactly to avoid writing to similar nicknames.
-- Dirty worktree checks only exclude `.tapd/config.json`, `.tapd/project.json`, `.tapd/context.json`, and `.tapd/logs/**`.
+- Dirty worktree checks only exclude `.tapd/config.json`, `.tapd/project.json`, `.tapd/context.json`, `.tapd/active-context.md`, and `.tapd/logs/**`.
 
 ## Runtime Requirements
 
