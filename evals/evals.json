@@ -129,6 +129,24 @@
       ]
     },
     {
+      "id": "daily-brief-is-short-readonly",
+      "input": "/tapd 生成今天的站会简报，workspace_id=12345678，当前用户=开发者A，简短一点。",
+      "expected": [
+        "不得要求当前分支 context 或 TAPD 工作项输入",
+        "只读调用 tasks、bugs、comments、timesheets 和 iterations 相关 MCP 能力，不写 TAPD",
+        "输出今日完成、进行中、风险、明日计划、数据、统计，且每区块最多 5 条"
+      ]
+    },
+    {
+      "id": "daily-brief-degrades-when-optional-data-missing",
+      "input": "帮我出今天日报；当前 MCP 只有 get_stories_or_tasks，没有 get_bug、get_comments、get_timesheets。",
+      "expected": [
+        "必须用 tasks 生成简短日报",
+        "不得臆造 Bug、评论或工时",
+        "在数据区用短句标明缺失：Bug、评论、工时"
+      ]
+    },
+    {
       "id": "finish-does-not-auto-transition-status",
       "input": "这个需求做完了，帮我收尾，给出提交信息并登记今天 3 小时工时。",
       "expected": [

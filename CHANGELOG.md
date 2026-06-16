@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0 - 2026-06-16
+
+- Add a read-only TAPD daily/standup brief workflow.
+- Summarize today's tasks, bugs, comments, timesheets, risks, and next work in a concise template.
+- Keep the brief independent from Git branch context.
+
 ## 1.1.1 - 2026-06-15
 
 - Promote Bug intake to the main MCP workflow.
