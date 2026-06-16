@@ -24,13 +24,15 @@
 ## 安装
 
 ```bash
-npx skills add hakityc/tapd-skill --skill tapd --global --agent codex --yes
+npx skills add hakityc/tapd-skill --skill tapd --global --yes
 ```
 
-其他代理也可以安装：
+Skills CLI 会自动识别当前 agent。若要指定某个 agent，可追加 `--agent <agent-name>`。
+
+## 更新
 
 ```bash
-npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --yes
+npx skills update tapd --global --yes
 ```
 
 ## 最简配置

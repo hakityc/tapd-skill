@@ -24,13 +24,15 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 ## Install
 
 ```bash
-npx skills add hakityc/tapd-skill --skill tapd --global --agent codex --yes
+npx skills add hakityc/tapd-skill --skill tapd --global --yes
 ```
 
-Other agents can install it too:
+The Skills CLI auto-detects the current agent. To target a specific agent, add `--agent <agent-name>`.
+
+## Update
 
 ```bash
-npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --yes
+npx skills update tapd --global --yes
 ```
 
 ## Minimal Setup
