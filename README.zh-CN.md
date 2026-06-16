@@ -35,9 +35,14 @@ npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --ye
 
 ## 最简配置
 
-团队成员只需要配置 TAPD MCP token。Skill 本身不保存 token。
+这个 skill 不内置 TAPD MCP 服务。Skill 负责编排工作流，MCP 服务负责访问 TAPD 和管理 token。
 
-推荐使用 [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)，当前兼容基线为 `mcp-server-tapd==8.0.78`。平台配置细节见 [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)。
+团队成员只需要在自己的 agent 里配置个人 TAPD MCP token。Skill 本身不保存 token。
+
+- MCP 官方文档：[modelcontextprotocol.io](https://modelcontextprotocol.io/docs/getting-started/intro)
+- TAPD MCP 服务：[`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)
+- 当前兼容基线：`mcp-server-tapd==8.0.78`
+- 平台配置说明：[`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)
 
 首次在业务仓库粘贴 TAPD 链接时，Skill 会：
 

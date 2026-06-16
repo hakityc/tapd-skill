@@ -35,9 +35,14 @@ npx skills add hakityc/tapd-skill --skill tapd --global --agent claude-code --ye
 
 ## Minimal Setup
 
-Team members only need to configure a TAPD MCP token. The skill itself does not store tokens.
+This skill does not bundle a TAPD MCP server. The skill orchestrates the workflow; the MCP server owns TAPD access and token handling.
 
-Use [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/) if possible. The current compatibility baseline is `mcp-server-tapd==8.0.78`. See [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md) for platform setup details.
+Team members only need to configure a personal TAPD MCP token in their agent. The skill itself does not store tokens.
+
+- MCP official docs: [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/getting-started/intro)
+- TAPD MCP server: [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)
+- Compatibility baseline: `mcp-server-tapd==8.0.78`
+- Platform setup notes: [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)
 
 When you paste a TAPD link in a business repository for the first time, the skill will:
 
