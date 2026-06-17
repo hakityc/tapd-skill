@@ -12,5 +12,14 @@
     "name_template": "{type}/tapd-{entity}-{id}-{slug}",
     "date_format": "YYMMDD",
     "slug_language": "en"
+  },
+  "effort": {
+    "capacity_per_week_hours": 30,
+    "wip_limit": 2,
+    "ai_coding_factor": 0.45,
+    "integration_factor": 0.85,
+    "planning_factor": 0.8,
+    "buffer_percent": 0.2,
+    "auto_writeback": true
   }
 }

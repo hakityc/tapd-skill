@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.1 - 2026-06-17
+
+- Make task orchestration automatically run effort scheduling and write back effort/begin/due for tasks owned by the current user.
+- Add opt-out wording for users who only want task creation without effort writeback.
+- Document effort defaults and allow `.tapd/config.json` to declare an `effort` section.
+
 ## 1.3.0 - 2026-06-16
 
 - Move default branch context storage from `.tapd/context.json` to `$GIT_DIR/tapd-context`.

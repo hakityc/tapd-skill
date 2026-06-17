@@ -19,6 +19,7 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 - Restores TAPD context from local Git-dir binding or the `tapd-*` branch name in later sessions so you can continue planning, coding, testing, or wrapping up.
 - Resolves a Task back to its parent Story; summarizes Bug reproduction steps, impact, related requirements, and regression scope.
 - Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
+- After splitting frontend tasks, estimates effort, schedules begin/due, and writes effort/begin/due back for tasks owned by the current user by default; say "only split tasks, do not write effort" to opt out.
 - Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
 
 ## Why Branch Binding
@@ -42,6 +43,7 @@ This solves the most common AI coding problem: context resets between sessions.
 | Start a Task | `/tapd start <Task link>` | Reads the Task and resolves its parent Story |
 | Fix a Bug | `/tapd fix <Bug link>` | Reads reproduction, impact, comments, and regression scope |
 | Continue work | `/tapd continue` | Restores context from the current Git branch |
+| Split tasks | `/tapd create a branch, split tasks, and write back to TAPD` | Creates tasks, writes owner/description, and fills effort/begin/due by default |
 | Wrap up | `/tapd wrap up` | Checks changes, runs validation, drafts comments and timesheets |
 | Standup | `/tapd standup brief` | Summarizes done, in progress, risks, and next work |
 

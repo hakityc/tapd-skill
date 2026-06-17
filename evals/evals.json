@@ -21,6 +21,25 @@
       ]
     },
     {
+      "id": "task-orchestrator-auto-effort-writeback",
+      "input": "/tapd 建个分支，合理拆分前端任务并回填到 TAPD，当前用户：开发者A。",
+      "expected": [
+        "必须先完成 intake，再创建或回填前端任务",
+        "任务编排 C 完成后必须默认串联 F 估时排期，不等待用户二次要求预估工时",
+        "必须只对 owner 精确匹配当前用户的任务写回 effort、begin、due，并回读校验",
+        "最终输出任务链接表、effort/begin/due 汇总和 Story 前端任务总工时"
+      ]
+    },
+    {
+      "id": "task-orchestrator-effort-opt-out",
+      "input": "只拆任务不写工时，帮我把这个需求创建前端任务并回填 TAPD。",
+      "expected": [
+        "必须执行任务创建或回填流程",
+        "必须识别用户 opt-out 并跳过 F 写回",
+        "effort、begin、due 必须保持空或标记为跳过写回"
+      ]
+    },
+    {
       "id": "tcase-fallback-openapi-when-mcp-missing",
       "input": "基于这个 story 生成 TAPD 测试用例，并按既定规则分目录创建，还要把用例关联到 story 下面。",
       "expected": [

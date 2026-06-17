@@ -40,6 +40,39 @@
           "const": "en"
         }
       }
+    },
+    "effort": {
+      "type": "object",
+      "properties": {
+        "capacity_per_week_hours": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "wip_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ai_coding_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "integration_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "planning_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "buffer_percent": {
+          "type": "number",
+          "minimum": 0
+        },
+        "auto_writeback": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

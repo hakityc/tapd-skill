@@ -1,0 +1,12 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {
+      "title": "TAPD",
+      "description": "TAPD requirement intake, task orchestration, effort scheduling, and development wrap-up workflows.",
+      "skills": [
+        "tapd"
+      ]
+    }
+  ]
+}
