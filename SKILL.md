@@ -1,6 +1,6 @@
 ---
 name: tapd
-description: TAPD 研发工作流总入口。用户提到 TAPD、Story、Task、Bug、一键复制、需求 intake、原型读取、拆任务、owner、effort、实现计划、按任务写代码、继续开发、测试、开发收尾、日报、站会简报、今日工作、明日计划、工时、提交关键字、排期、TAPD 评论、分支绑定、tapd-context 或 .tapd/context.json 时必须使用。工作项请求先解析本轮输入或恢复分支绑定；日报请求直接只读汇总 TAPD。
+description: TAPD 研发工作流总入口。用户提到 TAPD、Story、Task、Bug、一键复制、需求 intake、原型读取、拆任务、owner、effort、实现计划、按任务写代码、继续开发、测试、开发收尾、日报、站会简报、今日工作、今日待办、今天有哪些活、今天排什么、明日计划、工时、提交关键字、排期、TAPD 评论、分支绑定、tapd-context 或 .tapd/context.json 时必须使用。工作项请求先解析本轮输入或恢复分支绑定；日报/今日待办请求直接只读汇总 TAPD，其中今日待办按当前迭代的未完成任务做排程建议。
 compatibility: Requires Git, Node.js 18+ for bundled tapd-context, and tapd-mcp (uv plus Python 3.13+) for remote TAPD workflows.
 ---
 
@@ -24,7 +24,7 @@ compatibility: Requires Git, Node.js 18+ for bundled tapd-context, and tapd-mcp 
 
 只有本轮没有新工作项输入的“继续、状态、同步、计划”等请求，才默认使用当前分支 context。新输入不得被旧绑定覆盖。
 
-日报/站会简报是只读汇总工作流，不要求当前分支 context；进入 `references/daily-brief.md`。
+日报/站会简报与“今天有哪些活/今日 Todo”都是只读工作流，不要求当前分支 context；进入 `references/daily-brief.md`。前者回顾当天进展，后者从当前迭代未完成任务中挑选今天可推进的事项，不能只按 due=今天过滤。
 
 ## 1. 意图识别
 
@@ -36,7 +36,7 @@ compatibility: Requires Git, Node.js 18+ for bundled tapd-context, and tapd-mcp 
 - **F. 估时排期**：结合当前负载估时或写回排期。
 - **G. 评论同步**：同步代码 TODO、联调说明或研发备注。
 - **H. 开发收尾**：执行验证、生成提交关键字、登记工时或输出完成摘要。
-- **I. 日报/站会简报**：汇总今日完成、进行中、风险、明日计划，输出短简报。
+- **I. 日报/站会简报与今日待办**：日报汇总今日完成、进行中、风险和明日计划；今日待办从当前迭代的未完成任务中给出可执行排序与不建议今日启动的原因。
 
 拆任务、实现和测试用例都必须先完成 B。Story 与 description/原型是需求真相，tasks 只组织执行。
 

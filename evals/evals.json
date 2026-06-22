@@ -157,6 +157,17 @@
       ]
     },
     {
+      "id": "today-todo-prioritizes-current-iteration",
+      "input": "/tapd 看看我今天有哪些活要干，workspace_id=12345678，当前用户=开发者A。",
+      "expected": [
+        "不得要求 Git 分支 context，也不得写入 TAPD",
+        "先解析当前活跃迭代；有多个候选时优先按本人 open/progressing 任务归属收敛，仍歧义才请求用户选择",
+        "查询本人在当前迭代的所有未完成任务；due=今天只是排序信号，不能作为唯一包含条件",
+        "优先继续进行中和逾期任务，再结合优先级、最近截止日、WIP 与当日容量，给出最多 3 条可排今天的任务",
+        "对未选任务说明 WIP 已满、容量不足、依赖阻塞、低优先级或状态待确认等理由，不臆造依赖或剩余工时"
+      ]
+    },
+    {
       "id": "daily-brief-degrades-when-optional-data-missing",
       "input": "帮我出今天日报；当前 MCP 只有 get_stories_or_tasks，没有 get_bug、get_comments、get_timesheets。",
       "expected": [

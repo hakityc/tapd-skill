@@ -21,6 +21,7 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 - Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
 - After splitting frontend tasks, estimates effort, schedules begin/due, and writes effort/begin/due back for tasks owned by the current user by default; say "only split tasks, do not write effort" to opt out.
 - Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
+- Builds a "what should I do today" list from the current iteration's unfinished tasks, ranked by in-progress state, overdue risk, priority, due date, and capacity instead of only tasks due today.
 
 ## Why Branch Binding
 
@@ -46,6 +47,7 @@ This solves the most common AI coding problem: context resets between sessions.
 | Split tasks | `/tapd create a branch, split tasks, and write back to TAPD` | Creates tasks, writes owner/description, and fills effort/begin/due by default |
 | Wrap up | `/tapd wrap up` | Checks changes, runs validation, drafts comments and timesheets |
 | Standup | `/tapd standup brief` | Summarizes done, in progress, risks, and next work |
+| Today plan | `/tapd what should I work on today` | Ranks unfinished tasks in the current iteration into a practical today plan |
 
 ## Install
 
