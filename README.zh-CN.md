@@ -1,6 +1,6 @@
 # TAPD Skill
 
-面向 AI 编程代理的 TAPD 研发工作流 skill。它能读取 TAPD Story、Task、Bug，绑定 Git 分支上下文，辅助需求分析、拆任务、写代码、测试、收尾和生成简短日报。
+面向 AI 编程代理的 TAPD 研发工作流 skill。它能读取 TAPD Story、Task、Bug，绑定 Git 分支上下文，辅助需求分析、编码前审核、拆任务、写代码、测试、收尾和生成简短日报。
 
 [![skills.sh](https://skills.sh/b/hakityc/tapd-skill)](https://skills.sh/hakityc/tapd-skill/tapd)
 
@@ -18,6 +18,7 @@
 - 首次使用时在业务仓库生成本地 `.tapd/config.json`，并创建开发分支。
 - 后续会话从 Git dir 本机绑定或 `tapd-*` 分支名恢复 TAPD 上下文，继续计划、编码、测试或收尾。
 - Task 会回溯父 Story，Bug 会整理复现、影响、关联需求和回归范围。
+- 编码前对产品文档、原型和 tasks 做高影响审核，只找会导致返工、阻塞联调或影响验收的问题；用户确认后可同步到 TAPD 评论。
 - 创建/更新任务、测试用例、评论、工时前先 dry-run，并按 MCP 能力回读。
 - 拆分前端任务后默认自动估时、排期并写回本人任务的 effort/begin/due；明确说“只拆任务不写工时”时才跳过。
 - 生成简短日报/站会简报：今日完成、进行中、风险、明日计划、数据统计。
@@ -43,6 +44,7 @@ TAPD 是需求上下文，Git 分支是代码上下文。
 | 开始需求 | `/tapd 开始做 <Story 链接>` | 创建分支、绑定 TAPD、读取需求 |
 | 开始任务 | `/tapd 开始做 <Task 链接>` | 读取 Task，并回溯父 Story |
 | 修 Bug | `/tapd 修这个 Bug <Bug 链接>` | 读取复现、影响、评论和回归范围 |
+| 编码前审核 | `/tapd 先审一下产品文档和原型差异` | 找出会导致返工/阻塞/验收歧义的问题，确认后写 TAPD 评论 |
 | 继续开发 | `/tapd 继续开发` | 从当前 Git 分支恢复上下文 |
 | 拆任务回填 | `/tapd 建个分支，合理拆分任务回填到 TAPD` | 创建任务、写 owner/description，并默认补 effort/begin/due |
 | 开发收尾 | `/tapd 收尾` | 检查改动、运行验证、生成评论和工时草案 |

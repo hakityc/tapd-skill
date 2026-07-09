@@ -1,6 +1,6 @@
 # TAPD Skill
 
-A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Task, and Bug items, binds them to Git branch context, and helps with requirement intake, task planning, coding, testing, wrap-up, and concise daily briefs.
+A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Task, and Bug items, binds them to Git branch context, and helps with requirement intake, pre-development review, task planning, coding, testing, wrap-up, and concise daily briefs.
 
 [![skills.sh](https://skills.sh/b/hakityc/tapd-skill)](https://skills.sh/hakityc/tapd-skill/tapd)
 
@@ -18,6 +18,7 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 - Generates local `.tapd/config.json` in a business repository on first use, then creates a development branch.
 - Restores TAPD context from local Git-dir binding or the `tapd-*` branch name in later sessions so you can continue planning, coding, testing, or wrapping up.
 - Resolves a Task back to its parent Story; summarizes Bug reproduction steps, impact, related requirements, and regression scope.
+- Reviews product docs, prototypes, and tasks before coding for high-impact issues only: rework risk, integration blockers, or acceptance ambiguity; confirmed issues can be synced to TAPD comments.
 - Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
 - After splitting frontend tasks, estimates effort, schedules begin/due, and writes effort/begin/due back for tasks owned by the current user by default; say "only split tasks, do not write effort" to opt out.
 - Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
@@ -43,6 +44,7 @@ This solves the most common AI coding problem: context resets between sessions.
 | Start a Story | `/tapd start <Story link>` | Creates a branch, binds TAPD, reads the requirement |
 | Start a Task | `/tapd start <Task link>` | Reads the Task and resolves its parent Story |
 | Fix a Bug | `/tapd fix <Bug link>` | Reads reproduction, impact, comments, and regression scope |
+| Pre-dev review | `/tapd review product docs and prototype differences first` | Finds rework/blocker/acceptance issues, then writes confirmed items to TAPD comments |
 | Continue work | `/tapd continue` | Restores context from the current Git branch |
 | Split tasks | `/tapd create a branch, split tasks, and write back to TAPD` | Creates tasks, writes owner/description, and fills effort/begin/due by default |
 | Wrap up | `/tapd wrap up` | Checks changes, runs validation, drafts comments and timesheets |

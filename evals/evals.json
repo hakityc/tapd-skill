@@ -125,8 +125,19 @@
       "input": "/tapd 继续开发，接着上次没做完的地方完成代码和测试。",
       "expected": [
         "没有新工作项输入时恢复当前分支 context",
+        "编码前必须先执行产品文档/原型高影响审核，或记录用户明确跳过该审核",
         "读取 git diff 和现有测试判断停点，不根据 local_phase 猜进度",
         "实施代码、运行验证并报告剩余待联调项"
+      ]
+    },
+    {
+      "id": "pre-dev-review-confirms-before-comment",
+      "input": "/tapd 开始做这个需求，编码前先审一下产品文档和原型，找真正会导致返工的问题；确认后再放到 TAPD 评论里。",
+      "expected": [
+        "必须先完成 Story/Task intake，读取 description、原型和同 Story tasks",
+        "只输出会导致返工、阻塞联调或影响验收的高影响差异点，不列错别字、文案偏好或低价值建议",
+        "必须让用户按编号确认哪些是真问题，未经确认不得写 TAPD 评论",
+        "用户确认后用 create_comments 走 dry-run、确认和回读；缺少 create_comments 时只输出可复制评论草案"
       ]
     },
     {

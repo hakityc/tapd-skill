@@ -16,6 +16,7 @@
 | Bug 创建/更新 | `create_bug` / `update_bug` | `get_bug` 用于回读 | 缺写工具则只输出 dry-run，不直接调用 OpenAPI |
 | Task 创建 | `get_stories_or_tasks`, `create_story_or_task` | 无 | 缺创建工具则只输出 dry-run |
 | Task 更新 | `get_stories_or_tasks`, `update_story_or_task` | 无 | 缺更新工具则只输出 dry-run |
+| 编码前审核 | 对应 Story/Task intake 能力 | `create_comments`, `get_comments` | 仍可产出审核清单；用户确认后缺评论写入能力则只输出评论草案 |
 | Plan | 对应 Story/Task/Bug intake 能力 | `create_comments` | 仍可产出计划；不能同步评论时明确说明 |
 | 评论同步 | `create_comments` | `get_comments` | 缺创建工具则不写；缺读取工具可依据成功返回说明无法列表回读 |
 | Tcase 创建 | `create_or_update_tcases` 或 `create_tcases_batch` | `get_tcases`, `entity_relations`, `get_entity_relations` | 能创建就创建；缺关联工具时说明未关联 Story |

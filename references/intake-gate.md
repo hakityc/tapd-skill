@@ -14,6 +14,7 @@
 - Story ↔ Tasks 对照（覆盖/遗漏/冲突）
 - Bug 复现、影响、关联需求与回归范围
 - 代码落点初筛（路由/菜单/页面/API/类型/i18n）
+- 若用户要继续实现或要求审核，intake 后进入 `references/pre-dev-review.md`
 
 ## 强制步骤
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add a pre-development review workflow for high-impact product document, prototype, task, and acceptance gaps.
+- Require user confirmation before syncing confirmed review issues to TAPD comments.
+
 ## 1.3.1 - 2026-06-17
 
 - Make task orchestration automatically run effort scheduling and write back effort/begin/due for tasks owned by the current user.

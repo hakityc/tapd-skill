@@ -3,6 +3,7 @@
 ## 前置
 
 - 必须先完成 intake：`references/intake-gate.md`
+- 进入实现计划或编码前，必须先执行 `references/pre-dev-review.md`。若用户已在本轮确认“跳过编码前审核”，在输出中记录该决定后继续。
 - 按 `references/mcp-capability-matrix.md` 检查能力；评论同步是可选附加步骤，不阻止生成计划。
 - 所有本地与远端修改遵守 `references/safety-policy.md`。
 
@@ -19,6 +20,7 @@ Plan 必须包含：
 ## 执行纪律
 
 - 以 Story+原型为准；tasks 用于组织执行顺序与验收颗粒度。  
+- 编码前审核只保留高影响问题；用户确认的问题先走 TAPD 评论 dry-run，再进入计划或编码。  
 - 发现 tasks 漏拆：补计划步骤，但不擅自扩需求。  
 - 缺后端信息：明确“待联调”项与后续补齐点。  
 - 用户要求“实现、写代码、按任务做、继续开发”时，计划完成后继续执行 `references/development-executor.md`，不得停在方案文本。

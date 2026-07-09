@@ -1,11 +1,12 @@
 # 将代码内任务注释同步到 TAPD 评论
 
-与 `SKILL.md`「代码内任务注释」配套：**在仓库里新增或实质性修改**了绑定 TAPD 的 TODO/联调注释后，应在 TAPD **对应 Story 或 Task** 下追加一条评论，便于评审、测试与后端在 TAPD 内看到上下文。
+与 `SKILL.md`「代码内任务注释」配套：**在仓库里新增或实质性修改**了绑定 TAPD 的 TODO/联调注释后，应在 TAPD **对应 Story 或 Task** 下追加一条评论，便于评审、测试与后端在 TAPD 内看到上下文。`references/pre-dev-review.md` 中经用户确认的编码前审核问题，也复用本文件的 `create_comments`、dry-run 和回读规则。
 
 ## 何时触发
 
 - 新增 `TODO(...): [TAPD] …` 或等价绑定注释时。  
 - 该 TODO 的**含义或阻塞原因**发生实质变化时（可再发一条评论摘要变更；不必为改错别字重复发）。
+- 编码前审核发现产品文档/原型/Tasks 的高影响问题，且用户明确确认需要同步到 TAPD 时。
 
 ## 使用 tapd-mcp：`create_comments`
 
