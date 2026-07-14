@@ -20,7 +20,7 @@
 - Task 会回溯父 Story，Bug 会整理复现、影响、关联需求和回归范围。
 - 编码前对产品文档、原型和 tasks 做高影响审核，只找会导致返工、阻塞联调或影响验收的问题；用户确认后可同步到 TAPD 评论。
 - 创建/更新任务、测试用例、评论、工时前先 dry-run，并按 MCP 能力回读。
-- 拆分前端任务后默认自动估时、排期并写回本人任务的 effort/begin/due；明确说“只拆任务不写工时”时才跳过。
+- 按前端、后端、测试、产品或负责人 profile 拆分任务，默认先展示估时排期，确认后再写回 effort/begin/due。
 - 生成简短日报/站会简报：今日完成、进行中、风险、明日计划、数据统计。
 - 生成“今天做什么”清单：从当前迭代中本人未完成的任务按进行中、逾期、优先级、截止日期和容量排序，而非只看今天截止的任务。
 
@@ -46,10 +46,11 @@ TAPD 是需求上下文，Git 分支是代码上下文。
 | 修 Bug | `/tapd 修这个 Bug <Bug 链接>` | 读取复现、影响、评论和回归范围 |
 | 编码前审核 | `/tapd 先审一下产品文档和原型差异` | 找出会导致返工/阻塞/验收歧义的问题，确认后写 TAPD 评论 |
 | 继续开发 | `/tapd 继续开发` | 从当前 Git 分支恢复上下文 |
-| 拆任务回填 | `/tapd 建个分支，合理拆分任务回填到 TAPD` | 创建任务、写 owner/description，并默认补 effort/begin/due |
+| 拆任务回填 | `/tapd 建个分支，合理拆分任务回填到 TAPD` | 按 profile 创建任务、写 owner/description，确认后补 effort/begin/due |
 | 开发收尾 | `/tapd 收尾` | 检查改动、运行验证、生成评论和工时草案 |
 | 站会汇报 | `/tapd 站会简报` | 汇总完成、进行中、风险和明日计划 |
 | 今日待办 | `/tapd 看看我今天有哪些活要干` | 从当前迭代未完成任务中挑选今天优先推进的事项 |
+| 团队盘点 | `/tapd 看下当前迭代团队负载和风险` | 只读汇总成员 WIP、逾期、阻塞和无人负责事项 |
 
 ## 安装
 
@@ -82,6 +83,8 @@ npx skills update tapd --global --yes
 2. 让用户确认 base。
 3. 生成 `.tapd/config.json`。
 4. 创建 `tapd-story|task|bug-<id>` 开发分支并绑定当前工作项。
+
+团队推广时可将 `examples/team.example.json` 复制为业务仓库的 `.tapd/team.json` 并提交，用于统一 profile 前缀、修改范围、估时参数与写回策略。个人昵称和个人覆盖项仍保存在不提交的 `.tapd/config.json`。配置优先级为：本轮输入 > 个人配置 > 团队策略 > 安全默认值。
 
 生成的本地配置类似：
 
@@ -119,6 +122,7 @@ Skill 按敏感程度拆分本地状态：
 
 ```text
 .tapd/config.json                  项目配置
+.tapd/team.json                    团队共享策略（建议提交）
 $GIT_DIR/tapd-context/             本机分支绑定
 ~/.tapd-context/cache/             个人工作项缓存
 .tapd/active-context.md            生成给 Agent 读取的上下文
@@ -136,6 +140,8 @@ $GIT_DIR/tapd-context/             本机分支绑定
 ```
 
 CLI 不会自动修改 `.gitignore`。
+
+不要把 `.tapd/team.json` 加入 `.gitignore`；该文件不得包含 token 或个人昵称。
 
 为了让同事接手时更无痛，建议保留默认分支命名协议，例如 `feat/tapd-story-1112345678000000001-action-item`。同事 checkout 后执行 `/tapd 继续开发`，skill 可以先从分支名恢复 TAPD 身份，再通过 MCP 补全详情。
 

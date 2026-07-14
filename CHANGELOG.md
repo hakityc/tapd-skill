@@ -4,6 +4,10 @@
 
 - Add a pre-development review workflow for high-impact product document, prototype, task, and acceptance gaps.
 - Require user confirmation before syncing confirmed review issues to TAPD comments.
+- Add committed `.tapd/team.json` policy with profile-specific task prefixes and update scopes.
+- Change effort writeback to confirmation-first by default; explicit team or personal policy can opt into automatic writeback.
+- Preserve profile, workflow, and effort overrides when `tapd-context configure` rewrites local config.
+- Add a read-only team iteration review for WIP, overdue, blocked, and unowned tasks.
 
 ## 1.3.1 - 2026-06-17
 

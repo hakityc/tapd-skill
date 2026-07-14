@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tapd-context/team.schema.json",
+  "title": "TAPD Team Policy",
+  "type": "object",
+  "required": [
+    "version",
+    "defaults",
+    "task",
+    "permissions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "workspace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defaults": {
+      "type": "object",
+      "required": [
+        "profile",
+        "effort_writeback",
+        "status_transition"
+      ],
+      "properties": {
+        "profile": {
+          "enum": [
+            "frontend",
+            "backend",
+            "qa",
+            "product",
+            "lead"
+          ]
+        },
+        "effort_writeback": {
+          "enum": [
+            "confirm",
+            "auto",
+            "never"
+          ]
+        },
+        "status_transition": {
+          "enum": [
+            "never",
+            "confirm"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "required": [
+        "prefix_by_profile",
+        "update_scope_by_profile"
+      ],
+      "properties": {
+        "prefix_by_profile": {
+          "type": "object",
+          "properties": {
+            "frontend": { "type": "string", "minLength": 1, "pattern": "\\S" },
+            "backend": { "type": "string", "minLength": 1, "pattern": "\\S" },
+            "qa": { "type": "string", "minLength": 1, "pattern": "\\S" },
+            "product": { "type": "string", "minLength": 1, "pattern": "\\S" },
+            "lead": { "type": "string", "minLength": 1, "pattern": "\\S" }
+          },
+          "additionalProperties": false
+        },
+        "update_scope_by_profile": {
+          "type": "object",
+          "properties": {
+            "frontend": { "enum": ["self", "explicit-team"] },
+            "backend": { "enum": ["self", "explicit-team"] },
+            "qa": { "enum": ["self", "explicit-team"] },
+            "product": { "enum": ["self", "explicit-team"] },
+            "lead": { "enum": ["self", "explicit-team"] }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "object",
+      "required": [
+        "write_actions_by_profile"
+      ],
+      "properties": {
+        "write_actions_by_profile": {
+          "type": "object",
+          "properties": {
+            "frontend": { "$ref": "#/$defs/writeActions" },
+            "backend": { "$ref": "#/$defs/writeActions" },
+            "qa": { "$ref": "#/$defs/writeActions" },
+            "product": { "$ref": "#/$defs/writeActions" },
+            "lead": { "$ref": "#/$defs/writeActions" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "effort": {
+      "type": "object",
+      "properties": {
+        "capacity_per_week_hours": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "wip_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ai_coding_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "integration_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "planning_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "buffer_percent": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "writeActions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "create-task",
+          "update-self-task",
+          "update-explicit-team-task",
+          "write-effort",
+          "create-tcase",
+          "create-comment",
+          "write-timesheet",
+          "transition-status"
+        ]
+      }
+    }
+  }
+}

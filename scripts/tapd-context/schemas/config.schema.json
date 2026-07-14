@@ -23,6 +23,15 @@
       "type": "string",
       "minLength": 1
     },
+    "profile": {
+      "enum": [
+        "frontend",
+        "backend",
+        "qa",
+        "product",
+        "lead"
+      ]
+    },
     "branch": {
       "type": "object",
       "properties": {
@@ -70,6 +79,19 @@
         },
         "auto_writeback": {
           "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workflow": {
+      "type": "object",
+      "properties": {
+        "effort_writeback": {
+          "enum": [
+            "confirm",
+            "auto",
+            "never"
+          ]
         }
       },
       "additionalProperties": false

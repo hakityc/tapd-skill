@@ -20,7 +20,7 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 - Resolves a Task back to its parent Story; summarizes Bug reproduction steps, impact, related requirements, and regression scope.
 - Reviews product docs, prototypes, and tasks before coding for high-impact issues only: rework risk, integration blockers, or acceptance ambiguity; confirmed issues can be synced to TAPD comments.
 - Uses dry-run before creating or updating tasks, test cases, comments, or timesheets, then reads back results when MCP capabilities allow it.
-- After splitting frontend tasks, estimates effort, schedules begin/due, and writes effort/begin/due back for tasks owned by the current user by default; say "only split tasks, do not write effort" to opt out.
+- Splits tasks by frontend, backend, QA, product, or lead profile; estimates and schedules first, then writes effort/begin/due after confirmation by default.
 - Generates concise daily/standup briefs: done today, in progress, risks, next work, and data stats.
 - Builds a "what should I do today" list from the current iteration's unfinished tasks, ranked by in-progress state, overdue risk, priority, due date, and capacity instead of only tasks due today.
 
@@ -46,10 +46,11 @@ This solves the most common AI coding problem: context resets between sessions.
 | Fix a Bug | `/tapd fix <Bug link>` | Reads reproduction, impact, comments, and regression scope |
 | Pre-dev review | `/tapd review product docs and prototype differences first` | Finds rework/blocker/acceptance issues, then writes confirmed items to TAPD comments |
 | Continue work | `/tapd continue` | Restores context from the current Git branch |
-| Split tasks | `/tapd create a branch, split tasks, and write back to TAPD` | Creates tasks, writes owner/description, and fills effort/begin/due by default |
+| Split tasks | `/tapd create a branch, split tasks, and write back to TAPD` | Creates profile-based tasks, then confirms before filling effort/begin/due |
 | Wrap up | `/tapd wrap up` | Checks changes, runs validation, drafts comments and timesheets |
 | Standup | `/tapd standup brief` | Summarizes done, in progress, risks, and next work |
 | Today plan | `/tapd what should I work on today` | Ranks unfinished tasks in the current iteration into a practical today plan |
+| Team review | `/tapd review team load and risks for the current iteration` | Read-only summary of WIP, overdue, blocked, and unowned tasks |
 
 ## Install
 
@@ -82,6 +83,8 @@ When you paste a TAPD link in a business repository for the first time, the skil
 2. Ask you to confirm the base branch.
 3. Generate `.tapd/config.json`.
 4. Create a `tapd-story|task|bug-<id>` development branch and bind the current work item.
+
+For team rollout, copy `examples/team.example.json` to `.tapd/team.json` in the business repository and commit it. It defines shared profile prefixes, update scopes, effort parameters, and writeback policy. Personal identity and overrides remain in the untracked `.tapd/config.json`. Precedence is: current request > personal config > team policy > safe defaults.
 
 The generated local config looks like this:
 
@@ -119,6 +122,7 @@ The skill splits state by sensitivity:
 
 ```text
 .tapd/config.json                  project config
+.tapd/team.json                    shared team policy (commit this)
 $GIT_DIR/tapd-context/             local branch binding
 ~/.tapd-context/cache/             personal work item cache
 .tapd/active-context.md            generated agent-readable context
@@ -136,6 +140,8 @@ Recommended project `.gitignore` entries:
 ```
 
 The CLI never edits `.gitignore` automatically.
+
+Do not add `.tapd/team.json` to `.gitignore`; it must not contain tokens or personal nicknames.
 
 For painless handoff, keep the default branch naming protocol such as `feat/tapd-story-1112345678000000001-action-item`. A teammate can check out that branch and run `/tapd continue`; the skill can recover the TAPD identity from the branch name and then refresh details through MCP.
 

@@ -31,6 +31,9 @@ import {
   CliError,
   defaultProjectConfig,
   ProjectConfig,
+  TEAM_PROFILES,
+  TeamProfile,
+  validateTeamPolicy,
   WorkItemInput,
 } from "./schema.js";
 import {
@@ -60,6 +63,7 @@ const GITIGNORE_SUGGESTION = [
   ".tapd/active-context.md",
   ".tapd/logs/",
 ];
+const TEAM_POLICY_FILE = join(".tapd", "team.json");
 
 function parseArgs(argv: string[]): ParsedArgs {
   const [command = "", ...rest] = argv;
@@ -97,8 +101,8 @@ function printJson(value: unknown): void {
 
 function usage(): string {
   return [
-    "tapd-context init --base <branch> [--workspace <id>] [--user <nick>] [--force]",
-    "tapd-context configure [--user <nick>] [--base <branch>] [--workspace <id>]",
+    "tapd-context init --base <branch> [--workspace <id>] [--user <nick>] [--profile <profile>] [--force]",
+    "tapd-context configure [--user <nick>] [--profile <profile>] [--base <branch>] [--workspace <id>]",
     "tapd-context start --input <context-json-or-url> [--slug <slug>]",
     "tapd-context bind --input <context-json-or-url> [--force]",
     "tapd-context current [--format json|markdown]",
@@ -110,6 +114,20 @@ function usage(): string {
     "tapd-context logout",
     "tapd-context detect-base",
   ].join("\n");
+}
+
+function optionProfile(options: ParsedArgs["options"]): TeamProfile | undefined {
+  const profile = optionString(options, "profile");
+  if (!profile) {
+    return undefined;
+  }
+  if (!TEAM_PROFILES.includes(profile as TeamProfile)) {
+    throw new CliError(
+      "INVALID_ARGUMENT",
+      `profile 必须是以下值之一：${TEAM_PROFILES.join(", ")}。`,
+    );
+  }
+  return profile as TeamProfile;
 }
 
 function uniqueBranchName(repoRoot: string, desired: string): string {
@@ -129,6 +147,7 @@ function init(repoRoot: string, args: ParsedArgs): void {
   const user = optionString(args.options, "user");
   const base = optionString(args.options, "base");
   const workspace = optionString(args.options, "workspace");
+  const profile = optionProfile(args.options);
   if (!base) {
     throw new CliError(
       "INVALID_ARGUMENT",
@@ -150,7 +169,7 @@ function init(repoRoot: string, args: ParsedArgs): void {
     );
   }
 
-  writeProject(repoRoot, defaultProjectConfig(base, workspace, user));
+  writeProject(repoRoot, defaultProjectConfig(base, workspace, user, profile));
   printJson({
     ok: true,
     action: "init",
@@ -158,6 +177,7 @@ function init(repoRoot: string, args: ParsedArgs): void {
     base_branch: base,
     ...(workspace ? { workspace_id: workspace } : {}),
     ...(user ? { user_nick: user } : {}),
+    ...(profile ? { profile } : {}),
     gitignore_suggestion: GITIGNORE_SUGGESTION,
   });
 }
@@ -167,10 +187,11 @@ function configure(repoRoot: string, args: ParsedArgs): void {
   const user = optionString(args.options, "user");
   const base = optionString(args.options, "base");
   const workspace = optionString(args.options, "workspace");
-  if (!user && !base && !workspace) {
+  const profile = optionProfile(args.options);
+  if (!user && !base && !workspace && !profile) {
     throw new CliError(
       "INVALID_ARGUMENT",
-      "configure 至少需要 --user、--base 或 --workspace 中的一项。",
+      "configure 至少需要 --user、--profile、--base 或 --workspace 中的一项。",
     );
   }
   if (base) {
@@ -183,6 +204,9 @@ function configure(repoRoot: string, args: ParsedArgs): void {
   if (user) {
     project.user_nick = user;
   }
+  if (profile) {
+    project.profile = profile;
+  }
   writeProject(repoRoot, project);
   printJson({
     ok: true,
@@ -191,6 +215,7 @@ function configure(repoRoot: string, args: ParsedArgs): void {
     base_branch: project.base_branch,
     ...(project.workspace_id ? { workspace_id: project.workspace_id } : {}),
     ...(project.user_nick ? { user_nick: project.user_nick } : {}),
+    ...(project.profile ? { profile: project.profile } : {}),
     migrated_from_legacy: existsSync(join(repoRoot, LEGACY_PROJECT_FILE)),
     gitignore_suggestion: GITIGNORE_SUGGESTION,
   });
@@ -483,6 +508,7 @@ function doctor(repoRoot: string): void {
       path: CONFIG_FILE,
       exists: existsSync(join(repoRoot, CONFIG_FILE)),
     },
+    team_policy: teamPolicyStatus(repoRoot),
     active_context: {
       ...activeContextStatus(repoRoot),
       recommendation: "请确保 .tapd/active-context.md 已加入 .gitignore。",
@@ -491,6 +517,29 @@ function doctor(repoRoot: string): void {
     hook: hookStatus(repoRoot),
     current: currentResult,
   });
+}
+
+function teamPolicyStatus(repoRoot: string): Record<string, unknown> {
+  const path = join(repoRoot, TEAM_POLICY_FILE);
+  if (!existsSync(path)) {
+    return { path: TEAM_POLICY_FILE, exists: false };
+  }
+  try {
+    const value = JSON.parse(readFileSync(path, "utf8")) as unknown;
+    validateTeamPolicy(value);
+    return {
+      path: TEAM_POLICY_FILE,
+      exists: true,
+      valid: true,
+    };
+  } catch (error) {
+    return {
+      path: TEAM_POLICY_FILE,
+      exists: true,
+      valid: false,
+      error: error instanceof Error ? error.message : "team policy 无效。",
+    };
+  }
 }
 
 function activeContextStatus(repoRoot: string): Record<string, unknown> {

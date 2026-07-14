@@ -13,7 +13,7 @@ TAPD API，也不会执行 `git pull`、`git stash`、提交代码或修改 `.gi
 ```bash
 tapd-context detect-base
 tapd-context init --base master --workspace 12345678
-tapd-context configure --user "开发者A"
+tapd-context configure --user "开发者A" --profile frontend
 tapd-context start --input '{"entity_type":"Story","id":"...","title":"..."}'
 tapd-context bind --input '{"entity_type":"Task","id":"..."}'
 tapd-context current --format json
@@ -32,6 +32,7 @@ CLI 保持缺失，不生成虚假值。
 CLI 新版本默认写：
 
 - `.tapd/config.json`：项目低敏配置。
+- `.tapd/team.json`：团队共享策略，可提交仓库；CLI 不修改。
 - `$GIT_DIR/tapd-context/`：本机分支绑定，不进入业务仓库。
 - `~/.tapd-context/cache/`：个人本机工作项快照。
 - `.tapd/active-context.md`：Agent 可读渲染产物，必须 gitignored。

@@ -21,12 +21,13 @@
       ]
     },
     {
-      "id": "task-orchestrator-auto-effort-writeback",
+      "id": "task-orchestrator-confirm-effort-writeback",
       "input": "/tapd 建个分支，合理拆分前端任务并回填到 TAPD，当前用户：开发者A。",
       "expected": [
         "必须先完成 intake，再创建或回填前端任务",
-        "任务编排 C 完成后必须默认串联 F 估时排期，不等待用户二次要求预估工时",
-        "必须只对 owner 精确匹配当前用户的任务写回 effort、begin、due，并回读校验",
+        "任务编排 D 完成后必须默认串联 G 估时排期，不等待用户二次要求预估工时",
+        "缺少显式 auto 策略时必须展示 effort、begin、due dry-run 并等待确认",
+        "确认后只对 owner 精确匹配当前用户的任务写回 effort、begin、due，并回读校验",
         "最终输出任务链接表、effort/begin/due 汇总和 Story 前端任务总工时"
       ]
     },
@@ -194,6 +195,36 @@
         "先执行本地测试和 Story/Task 验收复核",
         "有 get_commit_msg 时生成 TAPD 提交关键字，工时写入先 dry-run 并查重",
         "不得自动提交 .tapd 文件或流转 TAPD 状态"
+      ]
+    },
+    {
+      "id": "backend-profile-uses-team-prefix",
+      "input": "/tapd profile=backend，帮我基于这个 Story 拆后端任务并回填 TAPD。",
+      "expected": [
+        "必须读取 team-policy 并解析 backend profile",
+        "优先使用 .tapd/team.json 中 backend 的任务前缀，缺失时使用【后端】",
+        "不得把任务硬编码为【前端】",
+        "默认展示估时排期 dry-run 并确认后写回"
+      ]
+    },
+    {
+      "id": "lead-team-update-requires-explicit-scope-and-second-confirmation",
+      "input": "我是负责人，把张三和李四这两个任务的 due 调到本周五。",
+      "expected": [
+        "不得仅根据负责人自然语言提升权限",
+        "必须确认当前 profile=lead、team policy 对 lead 配置 explicit-team，且允许 update-explicit-team-task",
+        "必须按 owner token 精确匹配张三和李四并逐条展示旧值到新值",
+        "团队范围写入即使用户说直接处理也必须二次确认并在写后回读"
+      ]
+    },
+    {
+      "id": "team-iteration-review-is-readonly",
+      "input": "/tapd 看下当前迭代团队负载、逾期和阻塞风险。",
+      "expected": [
+        "必须明确进入团队迭代盘点而不是个人今日待办",
+        "读取当前迭代全部 open/progressing tasks 并按 owner token 分组",
+        "输出成员 WIP、逾期、无人负责和有证据的阻塞项",
+        "不得自动修改 owner、排期、工时或状态，也不得把长期未修改臆断为阻塞"
       ]
     }
   ]

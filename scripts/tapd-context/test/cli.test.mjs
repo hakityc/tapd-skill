@@ -285,10 +285,47 @@ test("init can generate minimal config and configure adds optional identity", ()
   assert.equal(minimal.workspace_id, "12345678");
   assert.equal(minimal.user_nick, undefined);
 
-  const configured = run(cwd, "configure", "--user", "开发者A");
+  const configured = run(
+    cwd,
+    "configure",
+    "--user",
+    "开发者A",
+    "--profile",
+    "frontend",
+  );
   assert.equal(configured.status, 0);
   const updated = JSON.parse(readFileSync(configPath, "utf8"));
   assert.equal(updated.user_nick, "开发者A");
+  assert.equal(updated.profile, "frontend");
+});
+
+test("configure preserves team-oriented local overrides", () => {
+  const cwd = repo();
+  assert.equal(run(cwd, "init", "--base", "master", "--workspace", "12345678").status, 0);
+
+  const configPath = join(cwd, ".tapd", "config.json");
+  const config = JSON.parse(readFileSync(configPath, "utf8"));
+  config.profile = "backend";
+  config.workflow = { effort_writeback: "confirm" };
+  config.effort = {
+    capacity_per_week_hours: 24,
+    wip_limit: 1,
+    ai_coding_factor: 0.6,
+    integration_factor: 0.9,
+    planning_factor: 0.8,
+    buffer_percent: 0.3,
+    auto_writeback: false,
+  };
+  writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`);
+
+  const configured = run(cwd, "configure", "--user", "开发者A");
+  assert.equal(configured.status, 0);
+
+  const updated = JSON.parse(readFileSync(configPath, "utf8"));
+  assert.equal(updated.user_nick, "开发者A");
+  assert.equal(updated.profile, "backend");
+  assert.deepEqual(updated.workflow, { effort_writeback: "confirm" });
+  assert.deepEqual(updated.effort, config.effort);
 });
 
 test("legacy project config remains readable and configure migrates it", () => {
@@ -391,6 +428,27 @@ test("sync, doctor, hook and logout expose local lifecycle operations", () => {
   run(cwd, "init", "--base", "master", "--workspace", "12345678");
   const started = run(cwd, "start", "--input", input());
   assert.equal(started.status, 0);
+  const teamPolicy = {
+    version: 1,
+    defaults: {
+      profile: "frontend",
+      effort_writeback: "confirm",
+      status_transition: "never",
+    },
+    task: {
+      prefix_by_profile: { frontend: "【前端】" },
+      update_scope_by_profile: { frontend: "self" },
+    },
+    permissions: {
+      write_actions_by_profile: {
+        frontend: ["create-task", "update-self-task", "write-effort"],
+      },
+    },
+  };
+  writeFileSync(
+    join(cwd, ".tapd", "team.json"),
+    `${JSON.stringify(teamPolicy, null, 2)}\n`,
+  );
 
   const synced = run(cwd, "sync", "--current-branch");
   assert.equal(synced.status, 0);
@@ -407,6 +465,39 @@ test("sync, doctor, hook and logout expose local lifecycle operations", () => {
   assert.equal(doctor.json.current.ok, true);
   assert.equal(doctor.json.active_context.stale, false);
   assert.equal(doctor.json.hook.installed, false);
+  assert.equal(doctor.json.team_policy.exists, true);
+  assert.equal(doctor.json.team_policy.valid, true);
+
+  writeFileSync(
+    join(cwd, ".tapd", "team.json"),
+    `${JSON.stringify({ version: 1, defaults: {}, task: {} }, null, 2)}\n`,
+  );
+  const invalidTeamPolicy = run(cwd, "doctor");
+  assert.equal(invalidTeamPolicy.status, 0);
+  assert.equal(invalidTeamPolicy.json.team_policy.valid, false);
+  assert.match(invalidTeamPolicy.json.team_policy.error, /defaults\.profile/);
+
+  writeFileSync(
+    join(cwd, ".tapd", "team.json"),
+    `${JSON.stringify({ ...teamPolicy, workspace_id: 123 }, null, 2)}\n`,
+  );
+  const invalidWorkspace = run(cwd, "doctor");
+  assert.equal(invalidWorkspace.json.team_policy.valid, false);
+  assert.match(invalidWorkspace.json.team_policy.error, /workspace_id/);
+
+  writeFileSync(
+    join(cwd, ".tapd", "team.json"),
+    `${JSON.stringify({
+      ...teamPolicy,
+      task: {
+        ...teamPolicy.task,
+        prefix_by_profile: { frontend: " " },
+      },
+    }, null, 2)}\n`,
+  );
+  const invalidPrefix = run(cwd, "doctor");
+  assert.equal(invalidPrefix.json.team_policy.valid, false);
+  assert.match(invalidPrefix.json.team_policy.error, /prefix_by_profile/);
 
   const installed = run(cwd, "hook", "install");
   assert.equal(installed.status, 0);

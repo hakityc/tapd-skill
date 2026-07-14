@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "workspace_id": "12345678",
+  "base_branch": "master",
+  "defaults": {
+    "profile": "frontend",
+    "effort_writeback": "confirm",
+    "status_transition": "never"
+  },
+  "task": {
+    "prefix_by_profile": {
+      "frontend": "【前端】",
+      "backend": "【后端】",
+      "qa": "【测试】",
+      "product": "【产品】",
+      "lead": "【研发】"
+    },
+    "update_scope_by_profile": {
+      "frontend": "self",
+      "backend": "self",
+      "qa": "self",
+      "product": "self",
+      "lead": "explicit-team"
+    }
+  },
+  "permissions": {
+    "write_actions_by_profile": {
+      "frontend": ["create-task", "update-self-task", "write-effort", "create-comment", "write-timesheet"],
+      "backend": ["create-task", "update-self-task", "write-effort", "create-comment", "write-timesheet"],
+      "qa": ["create-task", "update-self-task", "create-tcase", "create-comment", "write-timesheet"],
+      "product": ["create-task", "update-self-task", "create-comment"],
+      "lead": ["create-task", "update-self-task", "update-explicit-team-task", "write-effort", "create-tcase", "create-comment", "write-timesheet"]
+    }
+  },
+  "effort": {
+    "capacity_per_week_hours": 30,
+    "wip_limit": 2,
+    "ai_coding_factor": 0.45,
+    "integration_factor": 0.85,
+    "planning_factor": 0.8,
+    "buffer_percent": 0.2
+  }
+}

@@ -18,6 +18,7 @@
 
 ## 工时登记
 
+- 按 `team-policy.md` 检查当前 profile 是否允许 `write-timesheet`；明确禁止时只生成登记草案。
 - `get_timesheets`、`add_timesheets`、`update_timesheets` 都按运行时能力探测。
 - 登记前展示日期、对象、owner、已登记工时、增量/覆盖值、剩余工时和 memo。
 - 同日已有记录时优先更新，不重复新增。

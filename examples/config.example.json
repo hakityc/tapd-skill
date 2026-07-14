@@ -3,6 +3,7 @@
   "base_branch": "master",
   "workspace_id": "12345678",
   "user_nick": "开发者A",
+  "profile": "frontend",
   "branch": {
     "type_map": {
       "Story": "feat",
@@ -20,6 +21,9 @@
     "integration_factor": 0.85,
     "planning_factor": 0.8,
     "buffer_percent": 0.2,
-    "auto_writeback": true
+    "auto_writeback": false
+  },
+  "workflow": {
+    "effort_writeback": "confirm"
   }
 }

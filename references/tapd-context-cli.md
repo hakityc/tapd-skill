@@ -10,8 +10,8 @@
 
 ```bash
 tapd-context detect-base
-tapd-context init --base "<confirmed-branch>" [--workspace "<id>"] [--user "<nick>"] [--force]
-tapd-context configure [--user "<nick>"] [--base "<branch>"] [--workspace "<id>"]
+tapd-context init --base "<confirmed-branch>" [--workspace "<id>"] [--user "<nick>"] [--profile "<profile>"] [--force]
+tapd-context configure [--user "<nick>"] [--profile "<profile>"] [--base "<branch>"] [--workspace "<id>"]
 tapd-context start --input '<context-json-or-standard-url>' [--slug '<english-slug>']
 tapd-context bind --input '<context-json-or-standard-url>' [--force]
 tapd-context current --format json
@@ -29,6 +29,7 @@ tapd-context logout
 ## Files
 
 - `.tapd/config.json`：base、workspace、可选用户 nick 和分支模板。
+- `.tapd/team.json`：可提交仓库的团队共享策略；CLI 不写该文件，由 skill 按 `team-policy.md` 读取。
 - `.tapd/project.json`：只读兼容旧版本配置；`configure` 可迁移为 config。
 - `$GIT_DIR/tapd-context/branches/<branch-hash>.json`：当前仓库本机分支绑定，只存 workspace、类型、ID、绑定方式和 Git commit。
 - `~/.tapd-context/cache/tapd/<workspace>/<type>/<id>.json`：个人本机工作项快照；不是 TAPD 事实源。

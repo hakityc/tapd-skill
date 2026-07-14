@@ -25,6 +25,7 @@
 | 开发收尾 | 无，本地验证可执行 | `get_commit_msg`, `get_timesheets`, `add_timesheets`, `update_timesheets`, `create_comments` | 分别生成提交/工时/评论草案，不阻塞本地收尾 |
 | 日报/站会简报 | `get_stories_or_tasks` | `get_bug`, `get_comments`, `get_timesheets`, `get_iterations`, `get_workflows_last_steps` | 缺任务读取则停止；缺可选数据则生成短 gap |
 | 今日待办规划（当前迭代） | `get_stories_or_tasks`, `get_iterations` | `get_bug`, `get_timesheets`, `get_workflows_last_steps` | 缺迭代读取时仅接受用户显式 iteration_id/name 或从本人任务唯一推断；不能退化为只筛 due=今天 |
+| 团队迭代盘点 | `get_stories_or_tasks`, `get_iterations` | `get_bug`, `get_comments`, `get_workflows_last_steps` | 只读拉取当前迭代任务并按 owner 分组；缺阻塞证据时不得臆造 |
 兼容基线 [`mcp-server-tapd==8.0.78`](https://pypi.org/project/mcp-server-tapd/8.0.78/) 的发布包源码已注册 `get_bug`、`create_bug`、`update_bug`、`get_comments`、`get_entity_relations` 和 `entity_relations`。运行时仍以实际暴露的工具为准，避免旧版本或宿主工具过滤造成误判。
 
 ## Current user

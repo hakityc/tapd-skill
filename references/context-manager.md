@@ -40,6 +40,7 @@ Story/Task 只有 URL 且缺标题时用 `get_stories_or_tasks` 补全，Bug 使
 3. 若输入是 URL，先完成只读 MCP 补全，再调用 `start --input '<JSON>' [--slug '<english-slug>']`。不要先创建低可读性分支、再补标题。
 4. 若返回 `PROJECT_NOT_INITIALIZED`：
    - 使用错误详情中的 candidates，必要时调用 `detect-base`。
+   - 若仓库存在 `.tapd/team.json`，读取其 `base_branch` 和 `workspace_id` 作为团队候选；不得把团队候选视为已确认。
    - 候选按用户指定、`origin/HEAD`、本地 `master`、本地 `main` 排序。
    - 向用户展示候选 base；workspace 优先取输入 URL/JSON。
    - 用户确认后执行 `init --base ... [--workspace ...]`，自动生成 `.tapd/config.json`。昵称不是初始化必填项。

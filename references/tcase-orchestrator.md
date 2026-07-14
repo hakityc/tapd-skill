@@ -6,7 +6,7 @@
 - **命名规则**：`[模块/功能] <Story标题精简> - <场景>`  
 - **用例粒度**：以“可独立验证”的场景为单位，优先覆盖 must 约束与原型核心路径。  
 
-如用户明确要求“按 task 挂载”，再改为按 `【前端】...` task 分组创建（仍然从 Story 约束出发）。  
+如用户明确要求“按 task 挂载”，先按 `team-policy.md` 解析 profile 前缀，再按对应 tasks 分组创建（仍然从 Story 约束出发）。
 
 ## 输入
 
@@ -35,6 +35,7 @@
 4. **避免重复（可选但推荐）**  
    - 存在 `get_tcases` 时通过 name 模糊匹配检查同名用例；缺失时在 dry-run 中提示无法预查重复  
 5. **写入 TAPD**  
+   - 按 `team-policy.md` 解析 profile；团队策略明确禁止 `create-tcase` 时只输出用例草案。缺少团队策略时沿用安全默认和 MCP 能力门禁。
    - 先按 `safety-policy.md` 展示 dry-run；未明确授权写入时等待确认  
    - 数量 ≤ 5：用 `create_or_update_tcases` 逐条创建（便于定位失败）  
    - 数量 > 5：用 `create_tcases_batch` 批量创建  

@@ -26,12 +26,14 @@ REQUIRED_SCHEMAS = {
     "config.schema.json",
     "project.schema.json",
     "context.schema.json",
+    "team.schema.json",
 }
 REQUIRED_EXAMPLES = {
     "tapd-context.input.json",
     "config.example.json",
     "project.example.json",
     "context.example.json",
+    "team.example.json",
 }
 
 
