@@ -9,6 +9,8 @@ export type EffortWritebackMode = (typeof EFFORT_WRITEBACK_MODES)[number];
 export const STATUS_TRANSITION_MODES = ["never", "confirm"] as const;
 export const UPDATE_SCOPES = ["self", "explicit-team"] as const;
 export const TEAM_WRITE_ACTIONS = [
+  "create-requirement",
+  "update-requirement",
   "create-task",
   "update-self-task",
   "update-explicit-team-task",

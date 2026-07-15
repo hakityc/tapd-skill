@@ -14,6 +14,9 @@
 | Story/Task intake | `get_stories_or_tasks` | `get_image`, `get_entity_attachments` | 缺读取工具则 bootstrap/升级后停止；缺图片工具则列出未读取原型 |
 | Bug intake | `get_bug` | `get_entity_attachments`, `get_comments`, `get_entity_relations` | 缺 `get_bug` 则只保留本地绑定并要求修复 MCP；可选信息缺失时列出 gap |
 | Bug 创建/更新 | `create_bug` / `update_bug` | `get_bug` 用于回读 | 缺写工具则只输出 dry-run，不直接调用 OpenAPI |
+| 产品规格首次发布 | `get_stories_or_tasks`, `create_story_or_task`（`entity_type='stories'`） | 无 | 先按稳定标题与受管标记恢复映射；缺读取或创建工具则只输出草案 |
+| 产品规格后续发布 | `get_stories_or_tasks`, `update_story_or_task` | `create_comments`, `get_comments` | 只替换 Flow 受管区块；缺更新工具则停止远端同步 |
+| 产品评审 Gate | `get_stories_or_tasks` | `create_comments`, `get_comments` | 可生成评审包；缺评论能力时输出可复制结论，不声称已通知 |
 | Task 创建 | `get_stories_or_tasks`, `create_story_or_task` | 无 | 缺创建工具则只输出 dry-run |
 | Task 更新 | `get_stories_or_tasks`, `update_story_or_task` | 无 | 缺更新工具则只输出 dry-run |
 | 编码前审核 | 对应 Story/Task intake 能力 | `create_comments`, `get_comments` | 仍可产出审核清单；用户确认后缺评论写入能力则只输出评论草案 |

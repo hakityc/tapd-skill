@@ -1,6 +1,6 @@
 # TAPD Skill
 
-A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Task, and Bug items, binds them to Git branch context, and helps with requirement intake, pre-development review, task planning, coding, testing, wrap-up, and concise daily briefs.
+An AI delivery workflow for teams. It uses a product Git repository as the specification source of truth and TAPD as the first collaboration provider, connecting requirement publishing, product review, development, quality validation, and delivery traceability. Future providers such as Feishu can reuse the same workflow.
 
 [![skills.sh](https://skills.sh/b/hakityc/tapd-skill)](https://skills.sh/hakityc/tapd-skill/tapd)
 
@@ -14,6 +14,8 @@ A TAPD development workflow skill for AI coding agents. It reads TAPD Story, Tas
 
 ## What It Does
 
+- Idempotently creates or updates a TAPD Story from `.flow/spec.json`, binding an exact specification commit and stable acceptance IDs.
+- Builds a product review package, records a human-confirmed decision, freezes `reviewed_ref`, and detects post-review specification changes.
 - Reads requirements, tasks, bugs, and prototype information after you paste a Story/Task/Bug link.
 - Generates local `.tapd/config.json` in a business repository on first use, then creates a development branch.
 - Restores TAPD context from local Git-dir binding or the `tapd-*` branch name in later sessions so you can continue planning, coding, testing, or wrapping up.
@@ -41,6 +43,8 @@ This solves the most common AI coding problem: context resets between sessions.
 
 | Scenario | Say | What the skill does |
 |---|---|---|
+| Publish requirement | `/tapd publish from this product repository` | Validates the Manifest, idempotently creates/updates a TAPD Story, and backfills its mapping |
+| Product review | `/tapd prepare product review` | Builds the review package and freezes the human-approved specification version |
 | Start a Story | `/tapd start <Story link>` | Creates a branch, binds TAPD, reads the requirement |
 | Start a Task | `/tapd start <Task link>` | Reads the Task and resolves its parent Story |
 | Fix a Bug | `/tapd fix <Bug link>` | Reads reproduction, impact, comments, and regression scope |
@@ -86,6 +90,8 @@ When you paste a TAPD link in a business repository for the first time, the skil
 
 For team rollout, copy `examples/team.example.json` to `.tapd/team.json` in the business repository and commit it. It defines shared profile prefixes, update scopes, effort parameters, and writeback policy. Personal identity and overrides remain in the untracked `.tapd/config.json`. Precedence is: current request > personal config > team policy > safe defaults.
 
+In the product repository, commit one additional `.flow/spec.json` to enable requirement publishing and product review. Start from [`examples/spec-manifest.example.json`](examples/spec-manifest.example.json); the contract is defined in [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json).
+
 The generated local config looks like this:
 
 ```json
@@ -121,6 +127,7 @@ Supported common link forms:
 The skill splits state by sensitivity:
 
 ```text
+.flow/spec.json                    product specification manifest (commit this in the product repository)
 .tapd/config.json                  project config
 .tapd/team.json                    shared team policy (commit this)
 $GIT_DIR/tapd-context/             local branch binding
@@ -177,3 +184,5 @@ python3 scripts/quick_validate.py .
 ## Note
 
 This is a community workflow tool and is not affiliated with TAPD. Before using write capabilities, confirm token permissions, the target workspace, and the dry-run content.
+
+Only the TAPD Provider is implemented today. See [`docs/product-vision.md`](docs/product-vision.md) and [`docs/roadmap.md`](docs/roadmap.md) for the product direction and rollout sequence.

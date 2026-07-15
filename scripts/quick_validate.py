@@ -27,6 +27,7 @@ REQUIRED_SCHEMAS = {
     "project.schema.json",
     "context.schema.json",
     "team.schema.json",
+    "spec-manifest.schema.json",
 }
 REQUIRED_EXAMPLES = {
     "tapd-context.input.json",
@@ -34,6 +35,7 @@ REQUIRED_EXAMPLES = {
     "project.example.json",
     "context.example.json",
     "team.example.json",
+    "spec-manifest.example.json",
 }
 
 
@@ -125,6 +127,35 @@ def validate_json_assets(skill_root: Path) -> None:
         value = load_json(path)
         if not isinstance(value, dict) or "$schema" not in value or "type" not in value:
             raise ValidationError(f"Schema lacks $schema/type: {path}")
+
+    team_schema = load_json(schemas / "team.schema.json")
+    assert isinstance(team_schema, dict)
+    schema_actions = set(team_schema["$defs"]["writeActions"]["items"]["enum"])
+    schema_source = (skill_root / "scripts" / "tapd-context" / "src" / "schema.ts").read_text(
+        encoding="utf-8"
+    )
+    actions_match = re.search(
+        r"export const TEAM_WRITE_ACTIONS = \[(.*?)\] as const;",
+        schema_source,
+        re.DOTALL,
+    )
+    if not actions_match:
+        raise ValidationError("TEAM_WRITE_ACTIONS declaration is missing")
+    source_actions = set(re.findall(r'"([a-z-]+)"', actions_match.group(1)))
+    if source_actions != schema_actions:
+        raise ValidationError(
+            "TEAM_WRITE_ACTIONS differs between src/schema.ts and team.schema.json"
+        )
+
+    team_example = load_json(examples / "team.example.json")
+    assert isinstance(team_example, dict)
+    example_actions = {
+        action
+        for actions in team_example["permissions"]["write_actions_by_profile"].values()
+        for action in actions
+    }
+    if not example_actions.issubset(schema_actions):
+        raise ValidationError("team.example.json contains unknown write actions")
 
     evals = load_json(skill_root / "evals" / "evals.json")
     if not isinstance(evals, dict) or not isinstance(evals.get("cases"), list):

@@ -16,6 +16,15 @@
 - 代码落点初筛（路由/菜单/页面/API/类型/i18n）
 - 若用户要继续实现或要求审核，intake 后进入 `references/pre-dev-review.md`
 
+## Flow 规格事实源
+
+Story/Task intake 发现 TAPD 受管描述包含 `【FLOW-SPEC-BEGIN:<spec_id>】`，或当前工作区存在与 Story publication 映射匹配的 `.flow/spec.json` 时：
+
+1. 执行 `references/spec-authority.md` 的完整判定，不在 intake 内另设简化条件。
+2. 正式准入后使用精确 Git ref 读取产品文档、原型、scope 和 `AC-*`，不因产品 Repo 当前 checkout 更新而静默切换版本。
+3. 未准入时只执行该规则允许的兼容或预研路径，并在输出中明确 gap。
+4. 评审后变化进入 `product-review-gate.md` 的增量评审规则。
+
 ## 强制步骤
 
 1. 从 context resolve 结果取得 `workspace_id`、`entity_type` 和字符串 ID。
@@ -34,7 +43,7 @@
    - 若返回缺少 `story_id`，输出 Task-only intake 和缺失项，不猜测父 Story。
 4. 若入口是 Story，当前 ID 即 `story_id`。
 5. 对 Story/Task 获取父 Story：`get_stories_or_tasks(workspace_id, { entity_type: 'stories', id: story_id, fields: 'id,name,description,...' })`（必须带 `description`）。
-6. 提取并查看原型图：若 `description` 有 `/tfl/captures/...png` 且存在 `get_image`，逐张获取下载地址并读取图片内容；缺少工具时记录 gap。
+6. 先按“Flow 规格事实源”尝试解析产品 Repo；未匹配 Manifest 时再提取 TAPD 原型图。若 `description` 有 `/tfl/captures/...png` 且存在 `get_image`，逐张获取下载地址并读取图片内容；缺少工具时记录 gap。
 7. 拉取同 Story tasks：`get_stories_or_tasks(workspace_id, { entity_type: 'tasks', story_id, fields: 'id,name,description,status,owner,created,modified' })`。
 8. 用仓库现状做边界：定位相关模块，形成“代码落点初筛”。
 9. 输出对应模板；Task 入口额外标明当前焦点 Task。
@@ -43,7 +52,7 @@
 
 按以下结构输出：
 
-- **Story摘要**：标题、链接、关键背景（若缺失写“未提供”）  
+- **Story摘要**：标题、链接、关键背景、规格来源和精确 ref（若缺失写“未提供”）
 - **硬约束（must）**：逐条列出（来自 description/原型）  
 - **期望（should）**：逐条列出  
 - **不在范围（out-of-scope）**：逐条列出（如果无法判断，写“未明确”）  

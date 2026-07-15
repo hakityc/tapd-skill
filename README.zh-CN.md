@@ -1,6 +1,6 @@
 # TAPD Skill
 
-面向 AI 编程代理的 TAPD 研发工作流 skill。它能读取 TAPD Story、Task、Bug，绑定 Git 分支上下文，辅助需求分析、编码前审核、拆任务、写代码、测试、收尾和生成简短日报。
+面向团队的 AI 研发交付工作流。它以产品 Git 仓库为规格事实源、以 TAPD 为首个协作 Provider，把需求发布、产品评审、开发执行、测试验证和交付追踪串成一条可复用链路；未来可在不改变团队流程的前提下接入飞书等平台。
 
 [![skills.sh](https://skills.sh/b/hakityc/tapd-skill)](https://skills.sh/hakityc/tapd-skill/tapd)
 
@@ -14,6 +14,8 @@
 
 ## 能做什么
 
+- 从产品仓库的 `.flow/spec.json` 幂等创建或更新 TAPD Story，绑定精确规格 commit 和稳定验收点 ID。
+- 生成产品评审包，由人确认评审结论并冻结 `reviewed_ref`；规格变化后自动识别需要增量复审。
 - 粘贴 Story/Task/Bug 链接后读取需求、任务、缺陷和原型信息。
 - 首次使用时在业务仓库生成本地 `.tapd/config.json`，并创建开发分支。
 - 后续会话从 Git dir 本机绑定或 `tapd-*` 分支名恢复 TAPD 上下文，继续计划、编码、测试或收尾。
@@ -41,6 +43,8 @@ TAPD 是需求上下文，Git 分支是代码上下文。
 
 | 场景 | 你说 | Skill 做什么 |
 |---|---|---|
+| 发布需求 | `/tapd 从当前产品仓库发布需求` | 校验规格 Manifest，幂等创建/更新 TAPD Story并回填映射 |
+| 产品评审 | `/tapd 准备产品评审` | 生成评审包，由人确认结论并冻结已评审规格版本 |
 | 开始需求 | `/tapd 开始做 <Story 链接>` | 创建分支、绑定 TAPD、读取需求 |
 | 开始任务 | `/tapd 开始做 <Task 链接>` | 读取 Task，并回溯父 Story |
 | 修 Bug | `/tapd 修这个 Bug <Bug 链接>` | 读取复现、影响、评论和回归范围 |
@@ -86,6 +90,8 @@ npx skills update tapd --global --yes
 
 团队推广时可将 `examples/team.example.json` 复制为业务仓库的 `.tapd/team.json` 并提交，用于统一 profile 前缀、修改范围、估时参数与写回策略。个人昵称和个人覆盖项仍保存在不提交的 `.tapd/config.json`。配置优先级为：本轮输入 > 个人配置 > 团队策略 > 安全默认值。
 
+产品仓库只需再提交一份 `.flow/spec.json`，即可发布需求和发起评审。可直接复制 [`examples/spec-manifest.example.json`](examples/spec-manifest.example.json)，字段约束见 [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json)。
+
 生成的本地配置类似：
 
 ```json
@@ -121,6 +127,7 @@ npx skills update tapd --global --yes
 Skill 按敏感程度拆分本地状态：
 
 ```text
+.flow/spec.json                    产品规格清单（产品仓库提交）
 .tapd/config.json                  项目配置
 .tapd/team.json                    团队共享策略（建议提交）
 $GIT_DIR/tapd-context/             本机分支绑定
@@ -177,3 +184,5 @@ python3 scripts/quick_validate.py .
 ## 说明
 
 本项目是社区工作流工具，不代表 TAPD 官方。使用写入能力前，请确认 token 权限、目标 workspace 和 dry-run 内容。
+
+当前只实现 TAPD Provider；完整产品定位和演进顺序见 [`docs/product-vision.md`](docs/product-vision.md) 与 [`docs/roadmap.md`](docs/roadmap.md)。

@@ -144,6 +144,8 @@
       "uniqueItems": true,
       "items": {
         "enum": [
+          "create-requirement",
+          "update-requirement",
           "create-task",
           "update-self-task",
           "update-explicit-team-task",

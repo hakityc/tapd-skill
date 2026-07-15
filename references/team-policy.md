@@ -51,6 +51,8 @@
 
 `.tapd/team.json.permissions.write_actions_by_profile` 是团队工作流的附加限制，不能提升 TAPD token 本身的权限。支持的写动作：
 
+- `create-requirement`
+- `update-requirement`
 - `create-task`
 - `update-self-task`
 - `update-explicit-team-task`
@@ -60,7 +62,7 @@
 - `write-timesheet`
 - `transition-status`
 
-执行远端写入前，先确认当前 profile 包含对应动作。缺少团队策略或缺少 profile 条目时使用安全默认：frontend/backend 允许创建和修改本人任务、本人估时、评论与工时；qa 允许本人测试任务、用例、评论与工时；product 允许本人确认任务与评论；lead 默认与研发相同，但团队范围更新仍必须同时具有 `update-explicit-team-task` 和 `explicit-team` scope。
+执行远端写入前，先确认当前 profile 包含对应动作。缺少团队策略或缺少 profile 条目时使用安全默认：frontend/backend 允许创建和修改本人任务、本人估时、评论与工时；qa 允许本人测试任务、用例、评论与工时；product 允许发布/更新 Requirement、本人确认任务与评论；lead 默认包含 Requirement 发布和研发动作，但团队范围更新仍必须同时具有 `update-explicit-team-task` 和 `explicit-team` scope。
 
 写动作白名单只能收紧工作流，不能绕过 MCP 能力门禁、owner 精确匹配、dry-run、二次确认或 TAPD 权限。只读 intake、个人待办和团队盘点不受写动作白名单限制。
 

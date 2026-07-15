@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Expand TAPD Skill into a provider-neutral Flow team delivery workflow, with TAPD as the first Provider.
+- Add the `.flow/spec.json` contract and an example product specification Manifest.
+- Add idempotent product Git Repo to TAPD Story publishing with exact Git version tracking and managed description blocks.
+- Add a human-confirmed product review Gate, reviewed-version freezing, and post-review specification change detection.
 - Add a pre-development review workflow for high-impact product document, prototype, task, and acceptance gaps.
 - Require user confirmation before syncing confirmed review issues to TAPD comments.
 - Add committed `.tapd/team.json` policy with profile-specific task prefixes and update scopes.

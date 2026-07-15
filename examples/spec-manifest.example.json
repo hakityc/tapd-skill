@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "spec_id": "order-approval-notification",
+  "title": "订单审批结果通知",
+  "source": {
+    "repo_url": "https://git.example.test/product/order-approval-spec.git",
+    "ref": "6f3e2d1c0b9a887766554433221100ffeeddccbb",
+    "document": "docs/requirement.md",
+    "prototype_paths": [
+      "prototype/index.html",
+      "prototype/assets/approval-result.png"
+    ],
+    "decisions": "docs/review-decisions.md"
+  },
+  "scope": {
+    "in_scope": [
+      "审批通过或拒绝后向申请人发送站内通知",
+      "通知中展示订单号、审批结果和处理时间"
+    ],
+    "out_of_scope": [
+      "短信通知",
+      "历史审批记录迁移"
+    ]
+  },
+  "acceptance": [
+    {
+      "id": "AC-01",
+      "priority": "must",
+      "statement": "订单审批通过后，申请人能收到包含订单号和处理时间的站内通知"
+    },
+    {
+      "id": "AC-02",
+      "priority": "must",
+      "statement": "订单审批拒绝后，通知中展示拒绝结果但不暴露内部审批备注"
+    }
+  ],
+  "publication": {
+    "provider": "tapd",
+    "space_id": "12345678",
+    "entity_type": "requirement"
+  },
+  "review": {
+    "status": "draft"
+  }
+}

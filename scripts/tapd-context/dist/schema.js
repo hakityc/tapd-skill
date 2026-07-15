@@ -4,6 +4,8 @@ export const EFFORT_WRITEBACK_MODES = ["confirm", "auto", "never"];
 export const STATUS_TRANSITION_MODES = ["never", "confirm"];
 export const UPDATE_SCOPES = ["self", "explicit-team"];
 export const TEAM_WRITE_ACTIONS = [
+    "create-requirement",
+    "update-requirement",
     "create-task",
     "update-self-task",
     "update-explicit-team-task",

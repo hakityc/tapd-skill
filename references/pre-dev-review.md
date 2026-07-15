@@ -7,7 +7,7 @@
 - 必须先完成 `references/intake-gate.md`，拿到 Story description、原型提取、Story ↔ Tasks 对照和代码落点初筛。
 - 按 `references/mcp-capability-matrix.md` 检查能力；评论写入需要 `create_comments`，缺失时只输出评论草案。
 - 所有 TAPD 写入遵守 `references/safety-policy.md`：先 dry-run，未经确认不写。
-- Task 入口时，审核对象仍以父 Story 为需求真相，当前 Task 只作为执行焦点。
+- Task 入口时，审核对象仍以父 Story 为边界；先执行 `references/spec-authority.md`，正式准入时以 reviewed_ref 产品规格为需求真相，当前 Task 只作为执行焦点。
 
 ## 审核范围
 

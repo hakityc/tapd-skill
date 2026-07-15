@@ -28,8 +28,8 @@
       "frontend": ["create-task", "update-self-task", "write-effort", "create-comment", "write-timesheet"],
       "backend": ["create-task", "update-self-task", "write-effort", "create-comment", "write-timesheet"],
       "qa": ["create-task", "update-self-task", "create-tcase", "create-comment", "write-timesheet"],
-      "product": ["create-task", "update-self-task", "create-comment"],
-      "lead": ["create-task", "update-self-task", "update-explicit-team-task", "write-effort", "create-tcase", "create-comment", "write-timesheet"]
+      "product": ["create-requirement", "update-requirement", "create-task", "update-self-task", "create-comment"],
+      "lead": ["create-requirement", "update-requirement", "create-task", "update-self-task", "update-explicit-team-task", "write-effort", "create-tcase", "create-comment", "write-timesheet"]
     }
   },
   "effort": {
