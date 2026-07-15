@@ -76,14 +76,14 @@ npx skills update tapd --global --yes
 
 This skill does not bundle a TAPD MCP server. The skill orchestrates the workflow; the MCP server owns TAPD access and token handling.
 
-Team members only need to configure a personal TAPD MCP token in their agent. The skill itself does not store tokens.
+Members do not need to learn `setup`, `doctor`, or `init` commands first: they can simply say “create a requirement” or “start this work item.” The skill diagnoses prerequisites automatically and asks only for the missing step. Each member must still complete a one-time secure TAPD authorization; the skill never stores tokens or asks users to paste one into chat, documentation, or Git.
 
 - MCP official docs: [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/getting-started/intro)
 - TAPD MCP server: [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)
 - Compatibility baseline: `mcp-server-tapd==8.0.78`
 - Platform setup notes: [`tapd/references/mcp-bootstrap.md`](tapd/references/mcp-bootstrap.md)
 
-When you paste a TAPD link in a business repository for the first time, the skill will:
+When you express a TAPD business intent in a repository for the first time, the skill will:
 
 1. Detect Git base branch candidates.
 2. Ask you to confirm the base branch.
@@ -92,7 +92,7 @@ When you paste a TAPD link in a business repository for the first time, the skil
 
 For team rollout, copy `tapd/examples/team.example.json` to `.tapd/team.json` in the business repository and commit it. It defines shared profile prefixes, update scopes, effort parameters, and writeback policy. Personal identity and overrides remain in the untracked `.tapd/config.json`. Precedence is: current request > personal config > team policy > safe defaults.
 
-In the product repository, commit one additional `.flow/spec.json` to enable requirement publishing and product review. Product users should ask the agent to initialize the flow so the bundled CLI generates and validates it; [`tapd/examples/spec-manifest.example.json`](tapd/examples/spec-manifest.example.json) is reference-only. The contract is defined in [`tapd/scripts/tapd-context/schemas/spec-manifest.schema.json`](tapd/scripts/tapd-context/schemas/spec-manifest.schema.json).
+In the product repository, commit the product document and prototype. If `.flow/spec.json` is missing, product users can ask the agent to create a requirement from the current document; it drafts scope and acceptance points, then generates and validates the Manifest after confirmation. Product users never need to hand-write JSON; [`tapd/examples/spec-manifest.example.json`](tapd/examples/spec-manifest.example.json) is reference-only. The contract is defined in [`tapd/scripts/tapd-context/schemas/spec-manifest.schema.json`](tapd/scripts/tapd-context/schemas/spec-manifest.schema.json).
 
 The generated local config looks like this:
 

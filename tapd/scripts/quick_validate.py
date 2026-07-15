@@ -37,6 +37,11 @@ REQUIRED_EXAMPLES = {
     "team.example.json",
     "spec-manifest.example.json",
 }
+REQUIRED_REFERENCES = {
+    "just-in-time-onboarding.md",
+    "mcp-bootstrap.md",
+    "team-policy.md",
+}
 
 
 class ValidationError(RuntimeError):
@@ -95,6 +100,10 @@ def validate_frontmatter(skill_root: Path) -> None:
 
 
 def validate_reference_links(skill_root: Path) -> None:
+    references_root = skill_root / "references"
+    missing_required = REQUIRED_REFERENCES - {path.name for path in references_root.glob("*.md")}
+    if missing_required:
+        raise ValidationError(f"Required references are missing: {sorted(missing_required)}")
     markdown_files = [skill_root / "SKILL.md", *(skill_root / "references").glob("*.md")]
     missing: set[str] = set()
     for path in markdown_files:

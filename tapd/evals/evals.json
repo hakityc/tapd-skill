@@ -113,6 +113,17 @@
       ]
     },
     {
+      "id": "product-first-use-is-intent-driven-and-keeps-token-private",
+      "input": "根据当前产品文档和原型帮我创建 TAPD 需求；这是我第一次使用。",
+      "expected": [
+        "必须先在后台执行本地诊断和只读 MCP 探测，不要求用户先执行 setup、doctor 或 init 命令",
+        "MCP 未连接时，只说明首次连接 TAPD 是当前唯一阻塞；不得要求用户把 token 发到对话、文档或 Git Repo",
+        "完成安全授权、reload 和重新探测后，必须自动恢复原始创建需求请求，不要求用户重复输入",
+        "识别到已提交产品文档和原型但缺少 Flow Manifest 时，必须以业务语言展示 scope/AC 草案并确认；不得要求产品经理手写 JSON",
+        "创建或更新 TAPD Requirement 前仍必须展示 dry-run 并获得远端写入确认"
+      ]
+    },
+    {
       "id": "task-intake-resolves-parent-story",
       "input": "开始处理这个 Task：https://www.tapd.cn/12345678/prong/tasks/view/1112345678000000002，读完需求后直接实现。",
       "expected": [

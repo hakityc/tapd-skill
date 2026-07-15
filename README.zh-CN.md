@@ -76,14 +76,14 @@ npx skills update tapd --global --yes
 
 这个 skill 不内置 TAPD MCP 服务。Skill 负责编排工作流，MCP 服务负责访问 TAPD 和管理 token。
 
-团队成员只需要在自己的 agent 里配置个人 TAPD MCP token。Skill 本身不保存 token。
+成员不需要预先学习 `setup`、`doctor` 或 `init` 命令：直接说“帮我创建需求”或“开始做这个需求”即可。Skill 会自动诊断环境，并只在首次连接 TAPD、缺少权限或缺少业务信息时引导当前的一步。个人 TAPD token 仍需要由本人完成一次安全授权；Skill 不保存 token，也不会要求把 token 发到聊天、文档或 Git 仓库。
 
 - MCP 官方文档：[modelcontextprotocol.io](https://modelcontextprotocol.io/docs/getting-started/intro)
 - TAPD MCP 服务：[`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)
 - 当前兼容基线：`mcp-server-tapd==8.0.78`
 - 平台配置说明：[`tapd/references/mcp-bootstrap.md`](tapd/references/mcp-bootstrap.md)
 
-首次在业务仓库粘贴 TAPD 链接时，Skill 会：
+首次在业务仓库表达 TAPD 业务目标时，Skill 会：
 
 1. 探测 Git base 分支候选。
 2. 让用户确认 base。
@@ -92,7 +92,7 @@ npx skills update tapd --global --yes
 
 团队推广时可将 `tapd/examples/team.example.json` 复制为业务仓库的 `.tapd/team.json` 并提交，用于统一 profile 前缀、修改范围、估时参数与写回策略。个人昵称和个人覆盖项仍保存在不提交的 `.tapd/config.json`。配置优先级为：本轮输入 > 个人配置 > 团队策略 > 安全默认值。
 
-产品仓库只需再提交一份 `.flow/spec.json`，即可发布需求和发起评审。产品经理建议直接说“初始化产品流程”，由 AI 调用 bundled CLI 生成并校验；[`tapd/examples/spec-manifest.example.json`](tapd/examples/spec-manifest.example.json) 仅用于参考，字段约束见 [`tapd/scripts/tapd-context/schemas/spec-manifest.schema.json`](tapd/scripts/tapd-context/schemas/spec-manifest.schema.json)。
+产品仓库只需提交产品文档和原型；缺少 `.flow/spec.json` 时，产品经理直接说“根据当前文档创建需求”，AI 会生成范围和验收点草案，确认后再生成并校验 Manifest。产品经理不需要手写 JSON；[`tapd/examples/spec-manifest.example.json`](tapd/examples/spec-manifest.example.json) 仅用于参考，字段约束见 [`tapd/scripts/tapd-context/schemas/spec-manifest.schema.json`](tapd/scripts/tapd-context/schemas/spec-manifest.schema.json)。
 
 生成的本地配置类似：
 

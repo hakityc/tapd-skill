@@ -62,15 +62,17 @@ D 与 G 默认串联，不是互斥分支：
 
 读取 `references/mcp-capability-matrix.md`，先探测 MCP 在线状态，再检查目标 workflow 的具体工具。
 
+所有 TAPD 意图都采用“按需配置”入口：用户只需表达业务目标，例如“帮我创建需求”或“开始做这个需求”。先读取 `references/just-in-time-onboarding.md`，在后台完成本地诊断与只读 MCP 探测；仅在发现缺失前置条件时，以业务语言收敛为当前缺失的一步。不得要求用户先学习或手动输入 `setup`、`doctor`、`init` 等命令。
+
 - Story、Task、Bug 都是主路径。兼容基线 `mcp-server-tapd==8.0.78` 原生提供对应读取与写入工具。
 - 仍需按运行时工具列表做能力门禁；缺少必需工具时执行 bootstrap、升级或重载 MCP，仍缺失则停止。
 - TAPD 远端读写只通过 MCP 执行，不直接调用 OpenAPI。
 
-MCP 整体不可用时执行 `references/mcp-bootstrap.md`，reload/restart 后重新探测。
+MCP 整体不可用时执行 `references/mcp-bootstrap.md`，reload/restart 后重新探测。Token 授权必须由用户在宿主工具的安全输入或账号授权界面完成；不得要求其发送到对话、写入 Git Repo，或回显到日志。
 
 ## 3. 工作流路由
 
-- A：`references/mcp-bootstrap.md`
+- A：先读 `references/just-in-time-onboarding.md`，再按需读 `references/mcp-bootstrap.md`
 - B：`references/intake-gate.md`
 - C：`references/pre-dev-review.md`
 - D：先读 `references/team-policy.md`，再读 `references/task-orchestrator.md`，并在创建/回填后串联 `references/effort-scheduler.md`
