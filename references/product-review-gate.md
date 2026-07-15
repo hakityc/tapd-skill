@@ -44,6 +44,7 @@
    - `review.status`
    - `review.reviewed_ref`（必须是 source.ref 的精确 commit）
    - `review.decided_at`
+   更新后再次调用 `tapd-context spec validate`；校验未通过不得同步 approved 状态。
 3. 将评审结论、未决项、owner 和 `reviewed_ref` 作为 TAPD 评论 dry-run；授权后写入并回读。
 4. 重新生成 Requirement 受管区块；即使产品内容 commit 未变化，只要 review 元数据变化，也要展示更新 dry-run，授权后写入并回读，避免 Story 仍显示旧评审状态。
 5. 不自动流转 TAPD Story 状态，不自动创建任务；任务创建仍走 `task-orchestrator.md`。

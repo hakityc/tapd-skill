@@ -228,6 +228,16 @@
       ]
     },
     {
+      "id": "product-flow-initializes-without-handwritten-json",
+      "input": "/tapd 初始化当前产品仓库的 Flow 需求。产品文档是 docs/requirement.md，原型在 prototype/，workspace_id=12345678。",
+      "expected": [
+        "必须读取已提交的产品文档和原型，生成 title、spec_id、in/out scope 和 AC 草案并展示确认",
+        "确认后必须调用 bundled tapd-context spec init，不要求产品经理手写 .flow/spec.json",
+        "必须再调用 tapd-context spec validate；manifest_valid=true 后仍需通过 Provider 能力、权限和只读连通门禁才能发布",
+        "文档或原型未提交、路径越界、origin 缺失或 ref 非精确 commit 时必须阻断"
+      ]
+    },
+    {
       "id": "spec-publish-first-create-and-backfill",
       "input": "/tapd 从当前产品仓库发布需求；.flow/spec.json 已提交但还没有 external_id。",
       "expected": [

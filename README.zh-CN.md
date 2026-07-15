@@ -15,6 +15,7 @@
 ## 能做什么
 
 - 从产品仓库的 `.flow/spec.json` 幂等创建或更新 TAPD Story，绑定精确规格 commit 和稳定验收点 ID。
+- 产品经理无需手写 Manifest；说“初始化产品流程”后由 AI 生成 scope/验收点草案，并通过 bundled CLI 做 Git 版本和路径硬校验。
 - 生成产品评审包，由人确认评审结论并冻结 `reviewed_ref`；规格变化后自动识别需要增量复审。
 - 粘贴 Story/Task/Bug 链接后读取需求、任务、缺陷和原型信息。
 - 首次使用时在业务仓库生成本地 `.tapd/config.json`，并创建开发分支。
@@ -44,6 +45,7 @@ TAPD 是需求上下文，Git 分支是代码上下文。
 | 场景 | 你说 | Skill 做什么 |
 |---|---|---|
 | 发布需求 | `/tapd 从当前产品仓库发布需求` | 校验规格 Manifest，幂等创建/更新 TAPD Story并回填映射 |
+| 初始化产品流程 | `/tapd 初始化当前产品仓库的 Flow 需求` | 分析已提交文档和原型，确认后生成并校验 `.flow/spec.json` |
 | 产品评审 | `/tapd 准备产品评审` | 生成评审包，由人确认结论并冻结已评审规格版本 |
 | 开始需求 | `/tapd 开始做 <Story 链接>` | 创建分支、绑定 TAPD、读取需求 |
 | 开始任务 | `/tapd 开始做 <Task 链接>` | 读取 Task，并回溯父 Story |
@@ -90,7 +92,7 @@ npx skills update tapd --global --yes
 
 团队推广时可将 `examples/team.example.json` 复制为业务仓库的 `.tapd/team.json` 并提交，用于统一 profile 前缀、修改范围、估时参数与写回策略。个人昵称和个人覆盖项仍保存在不提交的 `.tapd/config.json`。配置优先级为：本轮输入 > 个人配置 > 团队策略 > 安全默认值。
 
-产品仓库只需再提交一份 `.flow/spec.json`，即可发布需求和发起评审。可直接复制 [`examples/spec-manifest.example.json`](examples/spec-manifest.example.json)，字段约束见 [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json)。
+产品仓库只需再提交一份 `.flow/spec.json`，即可发布需求和发起评审。产品经理建议直接说“初始化产品流程”，由 AI 调用 bundled CLI 生成并校验；[`examples/spec-manifest.example.json`](examples/spec-manifest.example.json) 仅用于参考，字段约束见 [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json)。
 
 生成的本地配置类似：
 

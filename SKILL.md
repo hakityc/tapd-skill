@@ -18,7 +18,7 @@ compatibility: Requires Git, Node.js 18+ for bundled tapd-context, and tapd-mcp 
 
 ## 0. 入口解析
 
-“发布需求、同步产品文档、发起产品评审、记录评审结论”优先读取产品 Repo 的 `.flow/spec.json`，分别进入 K/L，不要求先有 TAPD 工作项。
+“初始化产品流程、发布需求、同步产品文档、发起产品评审、记录评审结论”优先进入 K/L，不要求先有 TAPD 工作项。`.flow/spec.json` 不存在时，K 先分析已提交的产品文档和原型、展示 scope 与验收点草案，确认后调用 bundled `tapd-context spec init`；发布前必须通过 `tapd-context spec validate`。
 
 其他工作项工作流执行 Context resolve：
 
@@ -46,7 +46,7 @@ compatibility: Requires Git, Node.js 18+ for bundled tapd-context, and tapd-mcp 
 - **H. 评论同步**：同步代码 TODO、联调说明、研发备注或已确认的编码前审核问题。
 - **I. 开发收尾**：执行验证、生成提交关键字、登记工时或输出完成摘要。
 - **J. 日报/站会简报、今日待办与团队盘点**：日报回顾个人进展；今日待办给出个人排序；团队盘点只读汇总当前迭代成员 WIP、逾期、阻塞和无人负责事项。
-- **K. 产品规格发布**：从产品 Git Repo 的 `.flow/spec.json` 幂等创建或更新 Provider Requirement，并回填映射。
+- **K. 产品规格初始化与发布**：为产品 Repo 生成并校验 `.flow/spec.json`，再幂等创建或更新 Provider Requirement 并回填映射。
 - **L. 产品评审 Gate**：生成评审输入包，记录人工确认结论，冻结 reviewed_ref，并识别评审后变化。
 
 拆任务、编码前审核、实现和测试用例都必须先完成 B，并统一执行 `references/spec-authority.md`；tasks 只组织执行。

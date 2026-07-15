@@ -37,6 +37,12 @@ import {
   WorkItemInput,
 } from "./schema.js";
 import {
+  FLOW_SPEC_FILE,
+  initializeFlowSpec,
+  readAndValidateFlowSpec,
+  renderFlowRequirement,
+} from "./spec.js";
+import {
   ACTIVE_CONTEXT_FILE,
   CONFIG_FILE,
   getCredentialsStatus,
@@ -110,10 +116,21 @@ function usage(): string {
     "tapd-context sync --current-branch [--silent]",
     "tapd-context refresh",
     "tapd-context doctor",
+    "tapd-context spec init --spec-id <id> --title <title> --workspace <id> --document <path> --prototype <path|path> --in-scope <item|item> --acceptance <item|item> [--out-of-scope <item|item>] [--force]",
+    "tapd-context spec validate",
+    "tapd-context spec status",
+    "tapd-context spec render",
     "tapd-context hook install|uninstall|status",
     "tapd-context logout",
     "tapd-context detect-base",
   ].join("\n");
+}
+
+function optionList(options: ParsedArgs["options"], key: string): string[] {
+  return optionString(options, key)
+    .split("|")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function optionProfile(options: ParsedArgs["options"]): TeamProfile | undefined {
@@ -509,6 +526,7 @@ function doctor(repoRoot: string): void {
       exists: existsSync(join(repoRoot, CONFIG_FILE)),
     },
     team_policy: teamPolicyStatus(repoRoot),
+    flow_spec: flowSpecStatus(repoRoot),
     active_context: {
       ...activeContextStatus(repoRoot),
       recommendation: "请确保 .tapd/active-context.md 已加入 .gitignore。",
@@ -517,6 +535,107 @@ function doctor(repoRoot: string): void {
     hook: hookStatus(repoRoot),
     current: currentResult,
   });
+}
+
+function flowSpecStatus(repoRoot: string): Record<string, unknown> {
+  if (!existsSync(join(repoRoot, FLOW_SPEC_FILE))) {
+    return { path: FLOW_SPEC_FILE, exists: false };
+  }
+  try {
+    const result = readAndValidateFlowSpec(repoRoot);
+    return {
+      path: FLOW_SPEC_FILE,
+      exists: true,
+      valid: true,
+      spec_id: result.manifest.spec_id,
+      exact_ref: result.exactRef,
+      manifest_valid: true,
+      provider_supported: result.providerSupported,
+      provider_check_required: result.providerSupported,
+      local_review_gate_valid: result.localReviewGateValid,
+      remote_readback_required: true,
+      publication: result.manifest.publication,
+      review: result.manifest.review,
+    };
+  } catch (error) {
+    const cliError =
+      error instanceof CliError ? error : new CliError("UNEXPECTED_ERROR", String(error));
+    return {
+      path: FLOW_SPEC_FILE,
+      exists: true,
+      valid: false,
+      error: {
+        code: cliError.code,
+        message: cliError.message,
+        ...(cliError.details ? { details: cliError.details } : {}),
+      },
+    };
+  }
+}
+
+function spec(repoRoot: string, args: ParsedArgs): void {
+  const subcommand = args.positionals[0] || "status";
+  if (subcommand === "init") {
+    const result = initializeFlowSpec(repoRoot, {
+      specId: optionString(args.options, "spec-id"),
+      title: optionString(args.options, "title"),
+      workspaceId: optionString(args.options, "workspace"),
+      document: optionString(args.options, "document"),
+      prototypePaths: optionList(args.options, "prototype"),
+      inScope: optionList(args.options, "in-scope"),
+      outOfScope: optionList(args.options, "out-of-scope"),
+      acceptance: optionList(args.options, "acceptance"),
+      force: args.options.force === true,
+    });
+    printJson({
+      ok: true,
+      action: "spec init",
+      file: FLOW_SPEC_FILE,
+      manifest: result.manifest,
+      exact_ref: result.exactRef,
+      manifest_valid: true,
+      provider_supported: result.providerSupported,
+      provider_check_required: result.providerSupported,
+      next_steps: [
+        "检查 .flow/spec.json 并提交到产品仓库",
+        "执行 tapd-context spec validate",
+        "在 Agent 中说：/tapd 从当前产品仓库发布需求",
+      ],
+    });
+    return;
+  }
+  if (subcommand === "validate" || subcommand === "status") {
+    const result = readAndValidateFlowSpec(repoRoot);
+    printJson({
+      ok: true,
+      action: `spec ${subcommand}`,
+      file: FLOW_SPEC_FILE,
+      spec_id: result.manifest.spec_id,
+      exact_ref: result.exactRef,
+      manifest_valid: true,
+      provider_supported: result.providerSupported,
+      provider_check_required: result.providerSupported,
+      local_review_gate_valid: result.localReviewGateValid,
+      remote_readback_required: true,
+      publication: result.manifest.publication,
+      review: result.manifest.review,
+    });
+    return;
+  }
+  if (subcommand === "render") {
+    const result = readAndValidateFlowSpec(repoRoot);
+    printJson({
+      ok: true,
+      action: "spec render",
+      file: FLOW_SPEC_FILE,
+      manifest_valid: true,
+      provider_supported: result.providerSupported,
+      provider_check_required: result.providerSupported,
+      requirement: renderFlowRequirement(result),
+    });
+    return;
+  }
+  throw new CliError("INVALID_ARGUMENT", "spec 仅支持 init、validate、status 或 render。");
 }
 
 function teamPolicyStatus(repoRoot: string): Record<string, unknown> {
@@ -702,6 +821,9 @@ function main(): void {
       break;
     case "doctor":
       doctor(repoRoot);
+      break;
+    case "spec":
+      spec(repoRoot, args);
       break;
     case "hook":
       hook(repoRoot, args);

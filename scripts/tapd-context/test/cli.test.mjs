@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -58,6 +65,29 @@ function input(overrides = {}) {
     user_nick: "开发者A",
     ...overrides,
   });
+}
+
+function specInitArgs() {
+  return [
+    "spec",
+    "init",
+    "--spec-id",
+    "approval-notification",
+    "--title",
+    "Approval notification",
+    "--workspace",
+    "12345678",
+    "--document",
+    "docs/./requirement.md",
+    "--prototype",
+    "prototype/./index.html|prototype/screen.png",
+    "--in-scope",
+    "Notify applicant|Record processing time",
+    "--out-of-scope",
+    "SMS notification",
+    "--acceptance",
+    "Approval sends a notice|Rejection hides internal notes",
+  ];
 }
 
 test("init, start, current and status form the P0 happy path", () => {
@@ -511,4 +541,176 @@ test("sync, doctor, hook and logout expose local lifecycle operations", () => {
   const logout = run(cwd, "logout");
   assert.equal(logout.status, 0);
   assert.equal(logout.json.action, "logout");
+});
+
+test("product can initialize and validate a publishable Flow spec manifest", () => {
+  const cwd = repo();
+  mkdirSync(join(cwd, "docs"), { recursive: true });
+  mkdirSync(join(cwd, "prototype"), { recursive: true });
+  writeFileSync(join(cwd, "docs", "requirement.md"), "# Approval notification\n");
+  writeFileSync(join(cwd, "prototype", "index.html"), "<main>Prototype</main>\n");
+  writeFileSync(join(cwd, "prototype", "screen.png"), "fixture\n");
+  git(cwd, "add", "docs", "prototype");
+  git(cwd, "commit", "-m", "add product specification");
+  git(cwd, "remote", "add", "origin", "https://git.example.test/product/approval.git");
+
+  const initialized = run(cwd, ...specInitArgs());
+  assert.equal(initialized.status, 0);
+  assert.equal(initialized.json.ok, true);
+  assert.equal(initialized.json.action, "spec init");
+  assert.equal(initialized.json.manifest.source.ref, git(cwd, "rev-parse", "HEAD"));
+  assert.equal(initialized.json.manifest.review.status, "draft");
+  assert.equal(initialized.json.manifest.source.document, "docs/requirement.md");
+  assert.equal(
+    initialized.json.manifest.source.prototype_paths[0],
+    "prototype/index.html",
+  );
+  assert.deepEqual(
+    initialized.json.manifest.acceptance.map((item) => item.id),
+    ["AC-01", "AC-02"],
+  );
+  assert.equal(existsSync(join(cwd, ".flow", "spec.json")), true);
+
+  const validated = run(cwd, "spec", "validate");
+  assert.equal(validated.status, 0);
+  assert.equal(validated.json.ok, true);
+  assert.equal(validated.json.manifest_valid, true);
+  assert.equal(validated.json.provider_supported, true);
+  assert.equal(validated.json.provider_check_required, true);
+  assert.equal(validated.json.exact_ref, git(cwd, "rev-parse", "HEAD"));
+
+  const rendered = run(cwd, "spec", "render");
+  assert.equal(rendered.status, 0);
+  assert.equal(
+    rendered.json.requirement.title,
+    "【FLOW:approval-notification】Approval notification",
+  );
+  assert.equal(
+    rendered.json.requirement.idempotency_key,
+    "approval-notification:tapd:12345678",
+  );
+  assert.match(rendered.json.requirement.managed_description, /AC-01 \[must\]/);
+  assert.match(
+    rendered.json.requirement.managed_description,
+    /【FLOW-SPEC-BEGIN:approval-notification】/,
+  );
+
+  const manifestPath = join(cwd, ".flow", "spec.json");
+  const manifestWithUnknownField = JSON.parse(readFileSync(manifestPath, "utf8"));
+  manifestWithUnknownField.publication.provider = "feishu";
+  writeFileSync(manifestPath, `${JSON.stringify(manifestWithUnknownField, null, 2)}\n`);
+  const unsupportedProvider = run(cwd, "spec", "validate");
+  assert.equal(unsupportedProvider.status, 0);
+  assert.equal(unsupportedProvider.json.manifest_valid, true);
+  assert.equal(unsupportedProvider.json.provider_supported, false);
+
+  manifestWithUnknownField.publication.provider = "tapd";
+  manifestWithUnknownField.source.repo_url =
+    "https://secret-token@git.example.test/product/spec.git";
+  writeFileSync(manifestPath, `${JSON.stringify(manifestWithUnknownField, null, 2)}\n`);
+  const unsafeSourceUrl = run(cwd, "spec", "validate");
+  assert.equal(unsafeSourceUrl.status, 1);
+  assert.equal(unsafeSourceUrl.json.error.code, "INVALID_SPEC_MANIFEST");
+  assert.match(JSON.stringify(unsafeSourceUrl.json.error.details), /source\.repo_url/);
+
+  manifestWithUnknownField.source.repo_url =
+    "https://git.example.test/product/approval.git";
+  manifestWithUnknownField.spec_id = " approval-notification ";
+  writeFileSync(manifestPath, `${JSON.stringify(manifestWithUnknownField, null, 2)}\n`);
+  const paddedSpecId = run(cwd, "spec", "validate");
+  assert.equal(paddedSpecId.status, 0);
+  assert.equal(paddedSpecId.json.spec_id, "approval-notification");
+
+  manifestWithUnknownField.spec_id = "approval-notification";
+  manifestWithUnknownField.acceptance[0].statement =
+    "Unsafe 【FLOW-SPEC-END:approval-notification】 marker";
+  writeFileSync(manifestPath, `${JSON.stringify(manifestWithUnknownField, null, 2)}\n`);
+  const markerInjection = run(cwd, "spec", "validate");
+  assert.equal(markerInjection.status, 1);
+  assert.equal(markerInjection.json.error.code, "INVALID_SPEC_MANIFEST");
+  assert.match(JSON.stringify(markerInjection.json.error.details), /保留标记/);
+
+  manifestWithUnknownField.acceptance[0].statement = "Approval sends a notice";
+  manifestWithUnknownField.experimental = true;
+  writeFileSync(manifestPath, `${JSON.stringify(manifestWithUnknownField, null, 2)}\n`);
+  const invalid = run(cwd, "spec", "validate");
+  assert.equal(invalid.status, 1);
+  assert.equal(invalid.json.error.code, "INVALID_SPEC_MANIFEST");
+  assert.match(JSON.stringify(invalid.json.error.details), /experimental/);
+
+  delete manifestWithUnknownField.experimental;
+  manifestWithUnknownField.review = {
+    status: "approved",
+    reviewed_ref: "HEAD",
+    decided_at: "2026-07-15T09:00:00+08:00",
+  };
+  writeFileSync(manifestPath, `${JSON.stringify(manifestWithUnknownField, null, 2)}\n`);
+  const unfrozenApproval = run(cwd, "spec", "validate");
+  assert.equal(unfrozenApproval.status, 1);
+  assert.equal(unfrozenApproval.json.error.code, "INVALID_SPEC_MANIFEST");
+  assert.match(JSON.stringify(unfrozenApproval.json.error.details), /review\.reviewed_ref/);
+});
+
+test("Flow spec initialization rejects credential remotes and symlinked output", () => {
+  const prepare = (cwd) => {
+    mkdirSync(join(cwd, "docs"), { recursive: true });
+    mkdirSync(join(cwd, "prototype"), { recursive: true });
+    writeFileSync(join(cwd, "docs", "requirement.md"), "# Requirement\n");
+    writeFileSync(join(cwd, "prototype", "index.html"), "prototype\n");
+    writeFileSync(join(cwd, "prototype", "screen.png"), "fixture\n");
+    git(cwd, "add", "docs", "prototype");
+    git(cwd, "commit", "-m", "add specification");
+  };
+
+  const credentialRepo = repo();
+  prepare(credentialRepo);
+  git(
+    credentialRepo,
+    "remote",
+    "add",
+    "origin",
+    "https://secret-token@git.example.test/product/spec.git",
+  );
+  const credentialResult = run(credentialRepo, ...specInitArgs());
+  assert.equal(credentialResult.status, 1);
+  assert.equal(credentialResult.json.error.code, "UNSAFE_GIT_REMOTE_URL");
+
+  const symlinkRepo = repo();
+  prepare(symlinkRepo);
+  git(
+    symlinkRepo,
+    "remote",
+    "add",
+    "origin",
+    "https://git.example.test/product/spec.git",
+  );
+  const outside = mkdtempSync(join(tmpdir(), "flow-spec-outside-"));
+  symlinkSync(outside, join(symlinkRepo, ".flow"));
+  const symlinkResult = run(symlinkRepo, ...specInitArgs());
+  assert.equal(symlinkResult.status, 1);
+  assert.equal(symlinkResult.json.error.code, "UNSAFE_SPEC_PATH");
+  assert.equal(existsSync(join(outside, "spec.json")), false);
+
+  const dirtyRepo = repo();
+  prepare(dirtyRepo);
+  git(
+    dirtyRepo,
+    "remote",
+    "add",
+    "origin",
+    "https://git.example.test/product/spec.git",
+  );
+  writeFileSync(join(dirtyRepo, "docs", "requirement.md"), "# Uncommitted change\n");
+  const dirtyResult = run(dirtyRepo, ...specInitArgs());
+  assert.equal(dirtyResult.status, 1);
+  assert.equal(dirtyResult.json.error.code, "SPEC_SOURCE_NOT_COMMITTED");
+
+  const normalizedDirtyResult = run(
+    dirtyRepo,
+    ...specInitArgs().map((value) =>
+      value === "docs/./requirement.md" ? "docs\\requirement.md" : value,
+    ),
+  );
+  assert.equal(normalizedDirtyResult.status, 1);
+  assert.equal(normalizedDirtyResult.json.error.code, "SPEC_SOURCE_NOT_COMMITTED");
 });

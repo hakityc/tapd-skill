@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add executable `tapd-context spec init/validate/status/render` commands for product-repository onboarding, deterministic TAPD payloads, and publish gates.
+- Add an MCP capability and read-only connectivity probe for pilot diagnostics.
 - Expand TAPD Skill into a provider-neutral Flow team delivery workflow, with TAPD as the first Provider.
 - Add the `.flow/spec.json` contract and an example product specification Manifest.
 - Add idempotent product Git Repo to TAPD Story publishing with exact Git version tracking and managed description blocks.

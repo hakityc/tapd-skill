@@ -243,6 +243,9 @@ def validate_cli(skill_root: Path) -> None:
     help_result = run([node, str(package_root / "dist" / "cli.js"), "--help"])
     if "tapd-context start" not in help_result.stdout:
         raise ValidationError("bundled dist CLI help is incomplete")
+    if "tapd-context spec init" not in help_result.stdout:
+        raise ValidationError("bundled dist CLI is missing Flow spec commands")
+    run([node, "--check", str(skill_root / "scripts" / "mcp_probe.mjs")])
 
 
 def run_tests(skill_root: Path) -> None:

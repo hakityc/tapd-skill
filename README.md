@@ -15,6 +15,7 @@ An AI delivery workflow for teams. It uses a product Git repository as the speci
 ## What It Does
 
 - Idempotently creates or updates a TAPD Story from `.flow/spec.json`, binding an exact specification commit and stable acceptance IDs.
+- Product users do not hand-write the Manifest: the agent drafts scope and acceptance points, while the bundled CLI enforces Git-version and path safety.
 - Builds a product review package, records a human-confirmed decision, freezes `reviewed_ref`, and detects post-review specification changes.
 - Reads requirements, tasks, bugs, and prototype information after you paste a Story/Task/Bug link.
 - Generates local `.tapd/config.json` in a business repository on first use, then creates a development branch.
@@ -44,6 +45,7 @@ This solves the most common AI coding problem: context resets between sessions.
 | Scenario | Say | What the skill does |
 |---|---|---|
 | Publish requirement | `/tapd publish from this product repository` | Validates the Manifest, idempotently creates/updates a TAPD Story, and backfills its mapping |
+| Initialize product flow | `/tapd initialize Flow for this product repository` | Drafts scope and acceptance from committed docs/prototypes, then generates and validates `.flow/spec.json` |
 | Product review | `/tapd prepare product review` | Builds the review package and freezes the human-approved specification version |
 | Start a Story | `/tapd start <Story link>` | Creates a branch, binds TAPD, reads the requirement |
 | Start a Task | `/tapd start <Task link>` | Reads the Task and resolves its parent Story |
@@ -90,7 +92,7 @@ When you paste a TAPD link in a business repository for the first time, the skil
 
 For team rollout, copy `examples/team.example.json` to `.tapd/team.json` in the business repository and commit it. It defines shared profile prefixes, update scopes, effort parameters, and writeback policy. Personal identity and overrides remain in the untracked `.tapd/config.json`. Precedence is: current request > personal config > team policy > safe defaults.
 
-In the product repository, commit one additional `.flow/spec.json` to enable requirement publishing and product review. Start from [`examples/spec-manifest.example.json`](examples/spec-manifest.example.json); the contract is defined in [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json).
+In the product repository, commit one additional `.flow/spec.json` to enable requirement publishing and product review. Product users should ask the agent to initialize the flow so the bundled CLI generates and validates it; [`examples/spec-manifest.example.json`](examples/spec-manifest.example.json) is reference-only. The contract is defined in [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json).
 
 The generated local config looks like this:
 

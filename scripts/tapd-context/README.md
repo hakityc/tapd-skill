@@ -10,6 +10,25 @@ TAPD API，也不会执行 `git pull`、`git stash`、提交代码或修改 `.gi
 
 ## Commands
 
+Product repository pilot:
+
+```bash
+tapd-context spec init \
+  --spec-id order-approval-notification \
+  --title "订单审批结果通知" \
+  --workspace 12345678 \
+  --document docs/requirement.md \
+  --prototype 'prototype/index.html|prototype/screen.png' \
+  --in-scope '审批结果站内通知|记录处理时间' \
+  --out-of-scope '短信通知' \
+  --acceptance '审批通过后申请人收到通知|拒绝通知不暴露内部备注'
+tapd-context spec validate
+tapd-context spec status
+tapd-context spec render
+```
+
+`spec init` fixes the source to the current exact Git commit and refuses product documents or prototypes that are not present in that commit. Product users normally ask the TAPD skill to initialize the flow; the skill invokes these commands after showing the inferred scope and acceptance points.
+
 ```bash
 tapd-context detect-base
 tapd-context init --base master --workspace 12345678
