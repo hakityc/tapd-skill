@@ -81,7 +81,7 @@ npx skills update tapd --global --yes
 - MCP 官方文档：[modelcontextprotocol.io](https://modelcontextprotocol.io/docs/getting-started/intro)
 - TAPD MCP 服务：[`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)
 - 当前兼容基线：`mcp-server-tapd==8.0.78`
-- 平台配置说明：[`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)
+- 平台配置说明：[`tapd/references/mcp-bootstrap.md`](tapd/references/mcp-bootstrap.md)
 
 首次在业务仓库粘贴 TAPD 链接时，Skill 会：
 
@@ -90,9 +90,9 @@ npx skills update tapd --global --yes
 3. 生成 `.tapd/config.json`。
 4. 创建 `tapd-story|task|bug-<id>` 开发分支并绑定当前工作项。
 
-团队推广时可将 `examples/team.example.json` 复制为业务仓库的 `.tapd/team.json` 并提交，用于统一 profile 前缀、修改范围、估时参数与写回策略。个人昵称和个人覆盖项仍保存在不提交的 `.tapd/config.json`。配置优先级为：本轮输入 > 个人配置 > 团队策略 > 安全默认值。
+团队推广时可将 `tapd/examples/team.example.json` 复制为业务仓库的 `.tapd/team.json` 并提交，用于统一 profile 前缀、修改范围、估时参数与写回策略。个人昵称和个人覆盖项仍保存在不提交的 `.tapd/config.json`。配置优先级为：本轮输入 > 个人配置 > 团队策略 > 安全默认值。
 
-产品仓库只需再提交一份 `.flow/spec.json`，即可发布需求和发起评审。产品经理建议直接说“初始化产品流程”，由 AI 调用 bundled CLI 生成并校验；[`examples/spec-manifest.example.json`](examples/spec-manifest.example.json) 仅用于参考，字段约束见 [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json)。
+产品仓库只需再提交一份 `.flow/spec.json`，即可发布需求和发起评审。产品经理建议直接说“初始化产品流程”，由 AI 调用 bundled CLI 生成并校验；[`tapd/examples/spec-manifest.example.json`](tapd/examples/spec-manifest.example.json) 仅用于参考，字段约束见 [`tapd/scripts/tapd-context/schemas/spec-manifest.schema.json`](tapd/scripts/tapd-context/schemas/spec-manifest.schema.json)。
 
 生成的本地配置类似：
 
@@ -176,7 +176,7 @@ CLI 不会自动修改 `.gitignore`。
 ## 开发验证
 
 ```bash
-cd scripts/tapd-context
+cd tapd/scripts/tapd-context
 npm ci
 npm test
 cd ../..

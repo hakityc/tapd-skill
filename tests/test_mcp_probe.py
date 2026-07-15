@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PROBE = ROOT / "scripts" / "mcp_probe.mjs"
+PROBE = ROOT / "tapd" / "scripts" / "mcp_probe.mjs"
 FAKE_SERVER = ROOT / "tests" / "fixtures" / "fake_mcp_server.mjs"
 
 

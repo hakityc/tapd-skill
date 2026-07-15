@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Package the complete skill under `tapd/` so standard Skills CLI installs include references, schemas, and the bundled CLI.
 - Add executable `tapd-context spec init/validate/status/render` commands for product-repository onboarding, deterministic TAPD payloads, and publish gates.
 - Add an MCP capability and read-only connectivity probe for pilot diagnostics.
 - Expand TAPD Skill into a provider-neutral Flow team delivery workflow, with TAPD as the first Provider.

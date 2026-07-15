@@ -249,6 +249,8 @@ def validate_cli(skill_root: Path) -> None:
 
 
 def run_tests(skill_root: Path) -> None:
+    repository_tests = skill_root.parent / "tests"
+    tests_root = repository_tests if repository_tests.is_dir() else skill_root / "tests"
     run(
         [
             sys.executable,
@@ -256,7 +258,7 @@ def run_tests(skill_root: Path) -> None:
             "unittest",
             "discover",
             "-s",
-            str(skill_root / "tests"),
+            str(tests_root),
             "-p",
             "test_*.py",
         ],

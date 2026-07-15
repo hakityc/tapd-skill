@@ -81,7 +81,7 @@ Team members only need to configure a personal TAPD MCP token in their agent. Th
 - MCP official docs: [modelcontextprotocol.io](https://modelcontextprotocol.io/docs/getting-started/intro)
 - TAPD MCP server: [`mcp-server-tapd`](https://pypi.org/project/mcp-server-tapd/)
 - Compatibility baseline: `mcp-server-tapd==8.0.78`
-- Platform setup notes: [`references/mcp-bootstrap.md`](references/mcp-bootstrap.md)
+- Platform setup notes: [`tapd/references/mcp-bootstrap.md`](tapd/references/mcp-bootstrap.md)
 
 When you paste a TAPD link in a business repository for the first time, the skill will:
 
@@ -90,9 +90,9 @@ When you paste a TAPD link in a business repository for the first time, the skil
 3. Generate `.tapd/config.json`.
 4. Create a `tapd-story|task|bug-<id>` development branch and bind the current work item.
 
-For team rollout, copy `examples/team.example.json` to `.tapd/team.json` in the business repository and commit it. It defines shared profile prefixes, update scopes, effort parameters, and writeback policy. Personal identity and overrides remain in the untracked `.tapd/config.json`. Precedence is: current request > personal config > team policy > safe defaults.
+For team rollout, copy `tapd/examples/team.example.json` to `.tapd/team.json` in the business repository and commit it. It defines shared profile prefixes, update scopes, effort parameters, and writeback policy. Personal identity and overrides remain in the untracked `.tapd/config.json`. Precedence is: current request > personal config > team policy > safe defaults.
 
-In the product repository, commit one additional `.flow/spec.json` to enable requirement publishing and product review. Product users should ask the agent to initialize the flow so the bundled CLI generates and validates it; [`examples/spec-manifest.example.json`](examples/spec-manifest.example.json) is reference-only. The contract is defined in [`scripts/tapd-context/schemas/spec-manifest.schema.json`](scripts/tapd-context/schemas/spec-manifest.schema.json).
+In the product repository, commit one additional `.flow/spec.json` to enable requirement publishing and product review. Product users should ask the agent to initialize the flow so the bundled CLI generates and validates it; [`tapd/examples/spec-manifest.example.json`](tapd/examples/spec-manifest.example.json) is reference-only. The contract is defined in [`tapd/scripts/tapd-context/schemas/spec-manifest.schema.json`](tapd/scripts/tapd-context/schemas/spec-manifest.schema.json).
 
 The generated local config looks like this:
 
@@ -176,7 +176,7 @@ For users:
 ## Development Validation
 
 ```bash
-cd scripts/tapd-context
+cd tapd/scripts/tapd-context
 npm ci
 npm test
 cd ../..
