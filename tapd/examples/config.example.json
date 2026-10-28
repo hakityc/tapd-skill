@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "base_branch": "master",
+  "workspace_id": "12345678",
+  "user_nick": "开发者A",
+  "profile": "frontend",
+  "branch": {
+    "type_map": {
+      "Story": "feat",
+      "Task": "task",
+      "Bug": "fix"
+    },
+    "name_template": "{type}/tapd-{entity}-{id}-{slug}",
+    "date_format": "YYMMDD",
+    "slug_language": "en"
+  },
+  "effort": {
+    "capacity_per_week_hours": 30,
+    "wip_limit": 2,
+    "ai_coding_factor": 0.45,
+    "integration_factor": 0.85,
+    "planning_factor": 0.8,
+    "buffer_percent": 0.2,
+    "auto_writeback": false
+  },
+  "workflow": {
+    "effort_writeback": "confirm"
+  }
+}

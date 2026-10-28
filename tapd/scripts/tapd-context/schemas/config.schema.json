@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/tapd-context/config.schema.json",
+  "title": "TAPD Local Project Configuration",
+  "type": "object",
+  "required": [
+    "version",
+    "base_branch"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "base_branch": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workspace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "user_nick": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile": {
+      "enum": [
+        "frontend",
+        "backend",
+        "qa",
+        "product",
+        "lead"
+      ]
+    },
+    "branch": {
+      "type": "object",
+      "properties": {
+        "type_map": {
+          "type": "object"
+        },
+        "name_template": {
+          "type": "string",
+          "minLength": 1
+        },
+        "date_format": {
+          "const": "YYMMDD"
+        },
+        "slug_language": {
+          "const": "en"
+        }
+      }
+    },
+    "effort": {
+      "type": "object",
+      "properties": {
+        "capacity_per_week_hours": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "wip_limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ai_coding_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "integration_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "planning_factor": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "buffer_percent": {
+          "type": "number",
+          "minimum": 0
+        },
+        "auto_writeback": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "workflow": {
+      "type": "object",
+      "properties": {
+        "effort_writeback": {
+          "enum": [
+            "confirm",
+            "auto",
+            "never"
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

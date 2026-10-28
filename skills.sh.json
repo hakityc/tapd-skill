@@ -1,0 +1,6 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "groupings": [
+    {"title": "TAPD", "description": "TAPD work management and development workflows.", "skills": ["tapd"]}
+  ]
+}
